@@ -1,0 +1,130 @@
+{% extends 'layout.html' %}
+
+{% block title %}Nurse Details - Newark Medical Associates{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{{ url_for('main.nurses') }}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Nurses
+            </a>
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Nurse Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3>{{ nurse.personnel.Name }}</h3>
+                            <p><strong>ID:</strong> {{ nurse.EmpID }}</p>
+                            <p><strong>Years of Experience:</strong> {{ nurse.YearsOfExperience }}</p>
+                            <p><strong>Grade:</strong> {{ nurse.Grade }}</p>
+                            <p><strong>Nursing Units:</strong> {{ nurse.NursingUnits }}</p>
+                            <p><strong>Surgery Type:</strong>
+                                {% if nurse.surgery_type %}
+                                {{ nurse.surgery_type.Name }}
+                                {% else %}
+                                Not assigned
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Contact Information</h4>
+                            <p><strong>Address:</strong> {{ nurse.personnel.Address }}</p>
+                            <p><strong>Phone:</strong> {{ nurse.personnel.Phone }}</p>
+                            <p><strong>Gender:</strong> {{ nurse.personnel.Gender.value }}</p>
+                            <p><strong>Clinic:</strong> {{ nurse.personnel.clinic.ClinicName }}</p>
+                            <p><strong>Salary:</strong> ${{ nurse.personnel.Salary }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Assigned Inpatients ({{ inpatients|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if inpatients %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Room</th>
+                                    <th>Bed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inpatient in inpatients %}
+                                <tr>
+                                    <td>{{ inpatient.PatientID }}</td>
+                                    <td>{{ inpatient.patient.Name }}</td>
+                                    <td>{{ inpatient.bed.RoomNum }}</td>
+                                    <td>{{ inpatient.BedLabel.value }}</td>
+                                    <td>
+                                        <a href="{{ url_for('main.patient_detail', id=inpatient.PatientID) }}"
+                                            class="btn btn-sm btn-primary">View Patient</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No inpatients assigned to this nurse.</p>
+                    {% endif %}
+
+                    {% if inpatients|length < 5 %} <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        This nurse has fewer than the required 5 inpatients. According to clinic policy, each nurse must
+                        attend to at least 5 inpatients.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Surgery Skills ({{ skills|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if skills %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Skill Code</th>
+                                <th>Description</th>
+                                <th>Surgery Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for skill in skills %}
+                            <tr>
+                                <td>{{ skill.SkillCode }}</td>
+                                <td>{{ skill.skill.Description }}</td>
+                                <td>{{ skill.skill.surgery_type.Name if skill.skill.surgery_type else 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No surgery skills recorded for this nurse.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

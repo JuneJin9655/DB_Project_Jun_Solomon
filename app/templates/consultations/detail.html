@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+
+{% block title %}Consultation Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.home') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.consultations') }}">Consultations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Consultation #{{ consultation.ConsultationID
+                        }}</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Consultation #{{ consultation.ConsultationID }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Consultation Information</h4>
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Consultation ID:</th>
+                                    <td>{{ consultation.ConsultationID }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Date:</th>
+                                    <td>{{ consultation.ConsultationDate }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Patient:</th>
+                                    <td>
+                                        <a href="{{ url_for('main.patient_detail', id=consultation.PatientID) }}">
+                                            {{ consultation.patient.Name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Physician:</th>
+                                    <td>
+                                        <a href="{{ url_for('main.physician_detail', id=consultation.EmpID) }}">
+                                            {{ consultation.physician.personnel.Name }}
+                                            <small class="text-muted">({{ consultation.physician.Specialty }})</small>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Patient Information</h4>
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Gender:</th>
+                                    <td>{{ consultation.patient.Gender.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Date of Birth:</th>
+                                    <td>{{ consultation.patient.DOB }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Blood Type:</th>
+                                    <td>{{ consultation.patient.BloodType or 'Not recorded' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Heart Risk Level:</th>
+                                    <td>
+                                        {% if consultation.patient.HeartRiskLevel %}
+                                        <span
+                                            class="badge bg-{{ 'danger' if consultation.patient.HeartRiskLevel.name == 'HIGH' else 'warning' if consultation.patient.HeartRiskLevel.name == 'MEDIUM' else 'success' }}">
+                                            {{ consultation.patient.HeartRiskLevel.name }}
+                                        </span>
+                                        {% else %}
+                                        Not assessed
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Diagnoses</h4>
+                </div>
+                <div class="card-body">
+                    {% if diagnoses %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Illness</th>
+                                    <th>Allergy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for diagnosis in diagnoses %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ diagnosis.illness.IllnessName }}</strong>
+                                        <small class="text-muted d-block">Code: {{ diagnosis.illness.IllnessCode
+                                            }}</small>
+                                    </td>
+                                    <td>
+                                        {% if diagnosis.allergy %}
+                                        {{ diagnosis.allergy.AllergyName }}
+                                        {% else %}
+                                        No allergy recorded
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No diagnoses recorded for this consultation.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Prescriptions</h4>
+                </div>
+                <div class="card-body">
+                    {% if prescriptions %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Medication</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prescription in prescriptions %}
+                                <tr>
+                                    <td>{{ prescription.PrescriptionID }}</td>
+                                    <td>
+                                        <a
+                                            href="{{ url_for('main.medication_detail', code=prescription.MedicationCode) }}">
+                                            {{ prescription.medication.MedicationName }}
+                                        </a>
+                                    </td>
+                                    <td>{{ prescription.Dosage }}</td>
+                                    <td>{{ prescription.Frequency }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No prescriptions recorded for this consultation.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

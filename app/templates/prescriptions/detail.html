@@ -1,0 +1,218 @@
+{% extends "layout.html" %}
+
+{% block title %}Prescription Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.home') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.prescriptions') }}">Prescriptions</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Prescription #{{ prescription.PrescriptionID
+                        }}</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h2 class="mb-0">Prescription #{{ prescription.PrescriptionID }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Prescription Information</h4>
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Prescription ID:</th>
+                                    <td>{{ prescription.PrescriptionID }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Medication:</th>
+                                    <td>
+                                        <a
+                                            href="{{ url_for('main.medication_detail', code=prescription.MedicationCode) }}">
+                                            {{ prescription.medication.MedicationName }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Dosage:</th>
+                                    <td>{{ prescription.Dosage }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Frequency:</th>
+                                    <td>{{ prescription.Frequency }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Medication Details</h4>
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Code:</th>
+                                    <td>{{ prescription.medication.MedicationCode }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Unit Cost:</th>
+                                    <td>${{ prescription.medication.UnitCost }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Quantity On Hand:</th>
+                                    <td>{{ prescription.medication.QuantityOnHand }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Year-To-Date Usage:</th>
+                                    <td>{{ prescription.medication.YearToDateUsage }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Patient Information</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th width="35%">Patient:</th>
+                            <td>
+                                <a href="{{ url_for('main.patient_detail', id=prescription.PatientID) }}">
+                                    {{ prescription.patient.Name }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Gender:</th>
+                            <td>{{ prescription.patient.Gender.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date of Birth:</th>
+                            <td>{{ prescription.patient.DOB }}</td>
+                        </tr>
+                        <tr>
+                            <th>Blood Type:</th>
+                            <td>{{ prescription.patient.BloodType or 'Not recorded' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Allergy:</th>
+                            <td>{{ prescription.patient.allergy.AllergyName if prescription.patient.allergy else 'None'
+                                }}</td>
+                        </tr>
+                        <tr>
+                            <th>Heart Risk Level:</th>
+                            <td>
+                                {% if prescription.patient.HeartRiskLevel %}
+                                <span
+                                    class="badge bg-{{ 'danger' if prescription.patient.HeartRiskLevel.name == 'HIGH' else 'warning' if prescription.patient.HeartRiskLevel.name == 'MEDIUM' else 'success' }}">
+                                    {{ prescription.patient.HeartRiskLevel.name }}
+                                </span>
+                                {% else %}
+                                Not assessed
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Physician Information</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th width="35%">Physician:</th>
+                            <td>
+                                <a href="{{ url_for('main.physician_detail', id=prescription.EmpID) }}">
+                                    {{ prescription.physician.personnel.Name }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Specialty:</th>
+                            <td>{{ prescription.physician.Specialty }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{{ 'success' if prescription.physician.IsActive else 'danger' }}">
+                                    {{ 'Active' if prescription.physician.IsActive else 'Inactive' }}
+                                </span>
+                                {% if prescription.physician.IsChief %}
+                                <span class="badge bg-primary">Chief</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if related_medications %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">Potential Drug Interactions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Medication</th>
+                                    <th>Severity</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in related_medications %}
+                                <tr>
+                                    <td>
+                                        <a
+                                            href="{{ url_for('main.medication_detail', code=item.medication.MedicationCode) }}">
+                                            {{ item.medication.MedicationName }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{{ 'danger' if item.severity.name == 'SEVERE' else 'warning' if item.severity.name == 'MODERATE' else 'info' if item.severity.name == 'LITTLE' else 'success' }}">
+                                            {{ item.severity.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if item.severity.name == 'SEVERE' %}
+                                        <strong>Avoid combination - serious adverse reactions possible</strong>
+                                        {% elif item.severity.name == 'MODERATE' %}
+                                        Monitor closely - may require dosage adjustment
+                                        {% elif item.severity.name == 'LITTLE' %}
+                                        Minimal clinical significance
+                                        {% else %}
+                                        No interaction expected
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

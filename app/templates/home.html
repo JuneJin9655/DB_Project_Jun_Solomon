@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newark Medical Associates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .stat-card {
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Newark Medical Associates</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/physicians">Physicians</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/patients">Patients</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/consultations">Consultations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/nurses">Nurses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/surgeons">Surgeons</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/surgery-schedules">Surgeries</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/medications">Medications</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="display-4 mb-4">Welcome to Newark Medical Associates</h1>
+                <p class="lead">A clinic located in Newark, New Jersey, owned by a group of medical corporations and
+                    individual physicians.</p>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <h2>System Overview</h2>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-3 mb-4">
+                <div class="card stat-card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Physicians</h5>
+                        <h2 class="display-4">{{ stats.physicians }}</h2>
+                        <a href="/physicians" class="btn btn-primary mt-2">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card stat-card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Nurses</h5>
+                        <h2 class="display-4">{{ stats.nurses }}</h2>
+                        <a href="/nurses" class="btn btn-primary mt-2">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card stat-card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Surgeons</h5>
+                        <h2 class="display-4">{{ stats.surgeons }}</h2>
+                        <a href="/surgeons" class="btn btn-primary mt-2">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card stat-card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Patients</h5>
+                        <h2 class="display-4">{{ stats.patients }}</h2>
+                        <a href="/patients" class="btn btn-primary mt-2">View All</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card stat-card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Inpatients</h5>
+                        <h2 class="display-4">{{ stats.inpatients }}</h2>
+                        <a href="/inpatients" class="btn btn-primary mt-2">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card stat-card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Consultations</h5>
+                        <h2 class="display-4">{{ stats.consultations }}</h2>
+                        <a href="/consultations" class="btn btn-primary mt-2">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card stat-card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Prescriptions</h5>
+                        <h2 class="display-4">{{ stats.prescriptions }}</h2>
+                        <a href="/prescriptions" class="btn btn-primary mt-2">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card stat-card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Surgeries</h5>
+                        <h2 class="display-4">{{ stats.surgeries }}</h2>
+                        <a href="/surgery-schedules" class="btn btn-primary mt-2">View All</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2025 Newark Medical Associates Project by Jun and Solomon.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

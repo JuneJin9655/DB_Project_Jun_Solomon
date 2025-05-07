@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Newark Medical Associates{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <style>
+        .stat-card {
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Newark Medical Associates</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/physicians' in request.path %}active{% endif %}"
+                            href="/physicians">Physicians</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/patients' in request.path %}active{% endif %}"
+                            href="/patients">Patients</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/consultations' in request.path %}active{% endif %}"
+                            href="/consultations">Consultations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/nurses' in request.path %}active{% endif %}"
+                            href="/nurses">Nurses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/surgeons' in request.path %}active{% endif %}"
+                            href="/surgeons">Surgeons</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/surgery-schedules' in request.path %}active{% endif %}"
+                            href="/surgery-schedules">Surgeries</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/medications' in request.path %}active{% endif %}"
+                            href="/medications">Medications</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/prescriptions' in request.path %}active{% endif %}"
+                            href="/prescriptions">Prescriptions</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <footer class="bg-light py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2025 Newark Medical Associates Project by Jun and Solomon.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

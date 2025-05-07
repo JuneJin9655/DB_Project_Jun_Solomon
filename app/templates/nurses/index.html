@@ -1,0 +1,159 @@
+{% extends 'layout.html' %}
+
+{% block title %}Nurses - Newark Medical Associates{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Nurses</h1>
+            <p class="lead">List of all nurses at Newark Medical Associates</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">All Nurses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Years of Experience</th>
+                                    <th>Grade</th>
+                                    <th>Nursing Units</th>
+                                    <th>Surgery Type</th>
+                                    <th>Inpatients</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for nurse in nurses %}
+                                <tr>
+                                    <td>{{ nurse.EmpID }}</td>
+                                    <td>{{ nurse.personnel.Name }}</td>
+                                    <td>{{ nurse.YearsOfExperience }}</td>
+                                    <td>{{ nurse.Grade }}</td>
+                                    <td>{{ nurse.NursingUnits }}</td>
+                                    <td>
+                                        {% if nurse.surgery_type %}
+                                        {{ nurse.surgery_type.Name }}
+                                        {% else %}
+                                        Not assigned
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ nurse.inpatients|length }} patients</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('main.nurse_detail', id=nurse.EmpID) }}"
+                                            class="btn btn-sm btn-primary">Details</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Nursing Units Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="nursingUnitsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data elements -->
+<div id="chartData" style="display: none;"
+    data-units='{{ ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5", "Unit 6", "Unit 7"]|tojson }}'
+    data-nurse-units='{{ nurses|selectattr("NursingUnits", "defined")|map(attribute="NursingUnits")|list|tojson }}'>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get data from hidden elements
+        const chartData = document.getElementById('chartData');
+        const units = JSON.parse(chartData.dataset.units);
+        const nurseUnits = JSON.parse(chartData.dataset.nurseUnits);
+
+        // Calculate counts for each unit
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+        nurseUnits.forEach(unitStr => {
+            if (unitStr) {
+                const unitNums = unitStr.split(',');
+                unitNums.forEach(num => {
+                    const idx = parseInt(num) - 1;
+                    if (idx >= 0 && idx < 7) {
+                        counts[idx]++;
+                    }
+                });
+            }
+        });
+
+        // Create chart
+        const ctx = document.getElementById('nursingUnitsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: units,
+                datasets: [{
+                    label: 'Number of Nurses',
+                    data: counts,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(255, 159, 64, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(201, 203, 207, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgb(54, 162, 235)',
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 159, 64)',
+                        'rgb(153, 102, 255)',
+                        'rgb(255, 99, 132)',
+                        'rgb(255, 206, 86)',
+                        'rgb(201, 203, 207)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

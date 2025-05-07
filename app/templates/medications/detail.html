@@ -1,0 +1,166 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ medication.MedicationName }} Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.home') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.medications') }}">Medications</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ medication.MedicationName }}</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">{{ medication.MedicationName }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Medication Information</h4>
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Medication Code:</th>
+                                    <td>{{ medication.MedicationCode }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Medication Name:</th>
+                                    <td>{{ medication.MedicationName }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Unit Cost:</th>
+                                    <td>${{ "%.2f"|format(medication.UnitCost) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Inventory Status</h4>
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Quantity On Hand:</th>
+                                    <td>
+                                        {{ medication.QuantityOnHand }}
+                                        {% if medication.QuantityOnHand <= 20 %} <span
+                                            class="badge bg-warning text-dark">Low Stock</span>
+                                            {% endif %}
+                                            {% if medication.QuantityOnHand == 0 %}
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                            {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Quantity On Order:</th>
+                                    <td>{{ medication.QuantityOnOrder }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Year-To-Date Usage:</th>
+                                    <td>{{ medication.YearToDateUsage }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h4 class="mb-0">Drug Interactions</h4>
+                        </div>
+                        <div class="card-body">
+                            {% if related_medications %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Medication</th>
+                                            <th>Severity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for related in related_medications %}
+                                        <tr>
+                                            <td>
+                                                <a
+                                                    href="{{ url_for('main.medication_detail', code=related.medication.MedicationCode) }}">
+                                                    {{ related.medication.MedicationName }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% if related.severity.value == 'S' %}
+                                                <span class="badge bg-danger">Severe</span>
+                                                {% elif related.severity.value == 'M' %}
+                                                <span class="badge bg-warning text-dark">Moderate</span>
+                                                {% elif related.severity.value == 'L' %}
+                                                <span class="badge bg-info">Little</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">None</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No known drug interactions for this medication.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="mb-0">Prescription History</h4>
+                        </div>
+                        <div class="card-body">
+                            {% if prescriptions %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Patient</th>
+                                            <th>Physician</th>
+                                            <th>Dosage</th>
+                                            <th>Frequency</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prescription in prescriptions %}
+                                        <tr>
+                                            <td>{{ prescription.PrescriptionID }}</td>
+                                            <td>
+                                                <a
+                                                    href="{{ url_for('main.patient_detail', id=prescription.PatientID) }}">
+                                                    {{ prescription.patient.Name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('main.physician_detail', id=prescription.EmpID) }}">
+                                                    {{ prescription.physician.personnel.Name }}
+                                                </a>
+                                            </td>
+                                            <td>{{ prescription.Dosage }}</td>
+                                            <td>{{ prescription.Frequency }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No prescription history for this medication.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

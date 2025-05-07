@@ -1,0 +1,177 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ surgery_type.Name }} - Surgery Type Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{{ url_for('main.surgery_types') }}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Surgery Types
+            </a>
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Surgery Type Information</h5>
+                    <div>
+                        {% if surgery_type.Category.value == 'H' %}
+                        <span class="badge bg-warning">Hospitalization Required</span>
+                        {% else %}
+                        <span class="badge bg-success">Outpatient</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3>{{ surgery_type.Name }}</h3>
+                            <p><strong>Code:</strong> {{ surgery_type.SurgeryCode }}</p>
+                            <p><strong>Anatomical Location:</strong> {{ surgery_type.AnatomicalLocation }}</p>
+                            <p><strong>Category:</strong>
+                                {% if surgery_type.Category.value == 'H' %}
+                                Hospitalization Required
+                                {% else %}
+                                Outpatient
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Special Requirements</h4>
+                            <p>{{ surgery_type.SpecialNeeds or 'No special requirements' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Required Skills ({{ skills|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if skills %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Skill Code</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for skill in skills %}
+                                <tr>
+                                    <td>{{ skill.SkillCode }}</td>
+                                    <td>{{ skill.Description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No skills recorded for this surgery type.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Assigned Nurses ({{ nurses|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if nurses %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Years of Experience</th>
+                                    <th>Grade</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for nurse in nurses %}
+                                <tr>
+                                    <td>{{ nurse.EmpID }}</td>
+                                    <td>{{ nurse.personnel.Name }}</td>
+                                    <td>{{ nurse.YearsOfExperience }}</td>
+                                    <td>{{ nurse.Grade }}</td>
+                                    <td>
+                                        <a href="{{ url_for('main.nurse_detail', id=nurse.EmpID) }}"
+                                            class="btn btn-sm btn-primary">Details</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No nurses assigned to this surgery type.</p>
+                    {% endif %}
+
+                    {% if nurses|length < 2 %} <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        This surgery type has fewer than the required 2 nurses. According to clinic policy, all types of
+                        surgery must have at least two nurses.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Scheduled Surgeries ({{ surgeries|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if surgeries %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Patient</th>
+                                <th>Surgeon</th>
+                                <th>Operating Room</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for surgery in surgeries %}
+                            <tr>
+                                <td>{{ surgery.ScheduleID }}</td>
+                                <td>{{ surgery.Date }}</td>
+                                <td>
+                                    <a href="{{ url_for('main.patient_detail', id=surgery.PatientID) }}">
+                                        {{ surgery.patient.Name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.surgeon_detail', id=surgery.EmpID) }}">
+                                        {{ surgery.surgeon.personnel.Name }}
+                                    </a>
+                                </td>
+                                <td>{{ surgery.OpRoomID }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No surgeries scheduled for this surgery type.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

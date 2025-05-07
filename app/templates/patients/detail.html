@@ -1,0 +1,291 @@
+{% extends 'layout.html' %}
+
+{% block title %}Patient Details - Newark Medical Associates{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{{ url_for('main.patients') }}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Patients
+            </a>
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Patient Information</h5>
+                    <div>
+                        {% if patient.IsInpatient %}
+                        <span class="badge bg-warning">Inpatient</span>
+                        {% else %}
+                        <span class="badge bg-success">Outpatient</span>
+                        {% endif %}
+
+                        {% if patient.IsEmployee %}
+                        <span class="badge bg-info">Employee</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h3>{{ patient.Name }}</h3>
+                            <p><strong>ID:</strong> {{ patient.PatientID }}</p>
+                            <p><strong>SSN:</strong> {{ patient.SSN }}</p>
+                            <p><strong>Gender:</strong> {{ patient.Gender.value }}</p>
+                            <p><strong>Date of Birth:</strong> {{ patient.DOB }}</p>
+                            <p><strong>Address:</strong> {{ patient.Address }}</p>
+                            <p><strong>Phone:</strong> {{ patient.Phone }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>Medical Information</h4>
+                            <p><strong>Blood Type:</strong> {{ patient.BloodType or 'Not recorded' }}</p>
+                            <p><strong>Primary Physician:</strong>
+                                <a href="{{ url_for('main.physician_detail', id=patient.PrimaryPhysicianID) }}">
+                                    {{ patient.primary_physician.personnel.Name }}
+                                </a>
+                            </p>
+                            <p><strong>Allergy:</strong>
+                                {% if patient.allergy %}
+                                {{ patient.allergy.AllergyName }}
+                                {% else %}
+                                None recorded
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>Heart Health</h4>
+                            <div
+                                class="card mb-3 {% if patient.HeartRiskLevel and patient.HeartRiskLevel.value == 'H' %}border-danger{% elif patient.HeartRiskLevel and patient.HeartRiskLevel.value == 'M' %}border-warning{% elif patient.HeartRiskLevel and patient.HeartRiskLevel.value == 'L' %}border-info{% elif patient.HeartRiskLevel and patient.HeartRiskLevel.value == 'N' %}border-success{% else %}border-secondary{% endif %}">
+                                <div class="card-body">
+                                    <h5>Cholesterol Profile</h5>
+                                    <p><strong>HDL:</strong> {{ patient.HDL or 'Not recorded' }}</p>
+                                    <p><strong>LDL:</strong> {{ patient.LDL or 'Not recorded' }}</p>
+                                    <p><strong>Triglyceride:</strong> {{ patient.Triglyceride or 'Not recorded' }}</p>
+                                    <p><strong>Blood Sugar:</strong> {{ patient.BloodSugar or 'Not recorded' }}</p>
+                                    <p><strong>Heart Risk:</strong>
+                                        {% if patient.HeartRiskLevel %}
+                                        {% if patient.HeartRiskLevel.value == 'N' %}
+                                        <span class="badge bg-success">None</span>
+                                        {% elif patient.HeartRiskLevel.value == 'L' %}
+                                        <span class="badge bg-info">Low</span>
+                                        {% elif patient.HeartRiskLevel.value == 'M' %}
+                                        <span class="badge bg-warning">Moderate</span>
+                                        {% elif patient.HeartRiskLevel.value == 'H' %}
+                                        <span class="badge bg-danger">High</span>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="badge bg-secondary">Not Assessed</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="patientTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="consultations-tab" data-bs-toggle="tab"
+                        data-bs-target="#consultations" type="button" role="tab">
+                        Consultations ({{ consultations|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="diagnoses-tab" data-bs-toggle="tab" data-bs-target="#diagnoses"
+                        type="button" role="tab">
+                        Diagnoses ({{ diagnoses|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="prescriptions-tab" data-bs-toggle="tab" data-bs-target="#prescriptions"
+                        type="button" role="tab">
+                        Prescriptions ({{ prescriptions|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="surgeries-tab" data-bs-toggle="tab" data-bs-target="#surgeries"
+                        type="button" role="tab">
+                        Surgeries ({{ surgeries|length }})
+                    </button>
+                </li>
+                {% if patient.IsInpatient %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="inpatient-tab" data-bs-toggle="tab" data-bs-target="#inpatient"
+                        type="button" role="tab">
+                        Inpatient Info
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+            <div class="tab-content p-3 border border-top-0 rounded-bottom" id="patientTabsContent">
+                <!-- Consultations Tab -->
+                <div class="tab-pane fade show active" id="consultations" role="tabpanel">
+                    {% if consultations %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Physician</th>
+                                    <th>Diagnoses</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consultation in consultations %}
+                                <tr>
+                                    <td>{{ consultation.ConsultationID }}</td>
+                                    <td>{{ consultation.ConsultationDate }}</td>
+                                    <td>{{ consultation.physician.personnel.Name }}</td>
+                                    <td>
+                                        {% for diagnosis in consultation.diagnoses %}
+                                        <span class="badge bg-info">{{ diagnosis.illness.IllnessCode }}</span>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No consultations recorded for this patient.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Diagnoses Tab -->
+                <div class="tab-pane fade" id="diagnoses" role="tabpanel">
+                    {% if diagnoses %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Physician</th>
+                                    <th>Illness</th>
+                                    <th>Allergy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for diagnosis in diagnoses %}
+                                <tr>
+                                    <td>{{ diagnosis.ConsultationDate }}</td>
+                                    <td>{{ diagnosis.physician.personnel.Name }}</td>
+                                    <td>{{ diagnosis.illness.Description }}</td>
+                                    <td>
+                                        {% if diagnosis.allergy %}
+                                        {{ diagnosis.allergy.AllergyName }}
+                                        {% else %}
+                                        None
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No diagnoses recorded for this patient.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Prescriptions Tab -->
+                <div class="tab-pane fade" id="prescriptions" role="tabpanel">
+                    {% if prescriptions %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Medication</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                    <th>Physician</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prescription in prescriptions %}
+                                <tr>
+                                    <td>{{ prescription.PrescriptionID }}</td>
+                                    <td>{{ prescription.medication.MedicationName }}</td>
+                                    <td>{{ prescription.Dosage }}</td>
+                                    <td>{{ prescription.Frequency }}</td>
+                                    <td>{{ prescription.physician.personnel.Name }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No prescriptions recorded for this patient.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Surgeries Tab -->
+                <div class="tab-pane fade" id="surgeries" role="tabpanel">
+                    {% if surgeries %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Surgery Type</th>
+                                    <th>Surgeon</th>
+                                    <th>Operating Room</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for surgery in surgeries %}
+                                <tr>
+                                    <td>{{ surgery.ScheduleID }}</td>
+                                    <td>{{ surgery.Date }}</td>
+                                    <td>{{ surgery.surgery_type.Name }}</td>
+                                    <td>{{ surgery.surgeon.personnel.Name }}</td>
+                                    <td>{{ surgery.OpRoomID }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No surgeries recorded for this patient.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Inpatient Info Tab -->
+                {% if patient.IsInpatient %}
+                <div class="tab-pane fade" id="inpatient" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">Inpatient Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Admission Date:</strong> {{ patient.inpatient.AdmissionDate }}</p>
+                                    <p><strong>Nursing Unit:</strong> {{ patient.inpatient.NursingUnits }}</p>
+                                    <p><strong>Room:</strong> {{ patient.inpatient.bed.RoomNum }}</p>
+                                    <p><strong>Bed:</strong> {{ patient.inpatient.BedLabel.value }}</p>
+                                    <p><strong>Wing:</strong> {{ patient.inpatient.bed.Wing.value }}</p>
+                                    <p><strong>Attending Nurse:</strong>
+                                        {% if patient.inpatient.nurse %}
+                                        {{ patient.inpatient.nurse.personnel.Name }}
+                                        {% else %}
+                                        Not assigned
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
