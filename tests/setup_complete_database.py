@@ -21,7 +21,8 @@ def setup_complete_database():
     # Step 1: Reset database and create initial structure
     print("\n=== Step 1: Resetting database and creating structure ===")
     reset_module = load_module("reset_and_create_data", os.path.join(current_dir, "reset_and_create_data.py"))
-    reset_module.reset_and_create_data()
+    reset_module.reset_database()
+    reset_module.create_new_data()
     
     # Step 2: Insert basic clinic data
     print("\n=== Step 2: Inserting clinic data ===")
@@ -32,26 +33,26 @@ def setup_complete_database():
     print("\n=== Step 3: Inserting personnel data ===")
     personnel_module = load_module("insert_personnel_data", os.path.join(current_dir, "insert_personnel_data.py"))
     personnel_module.insert_personnel_data()
-    
+
     # Step 4: Insert patient data
+    print("\n=== Step 7: Inserting illness data ===")
+    illness_module = load_module("insert_illness_data", os.path.join(current_dir, "insert_illness_data.py"))
+    illness_module.insert_illness_data()
+    
+    # Step 5: Insert bed data
     print("\n=== Step 4: Inserting patient data ===")
     patient_module = load_module("insert_patient_data", os.path.join(current_dir, "insert_patient_data.py"))
     patient_module.insert_patient_data()
     
-    # Step 5: Insert bed data
+    # Step 6: Insert inpatient data
     print("\n=== Step 5: Inserting bed data ===")
     bed_module = load_module("insert_bed_data", os.path.join(current_dir, "insert_bed_data.py"))
     bed_module.insert_bed_data()
-    
-    # Step 6: Insert inpatient data
+   
+    # Step 7: Insert illness data
     print("\n=== Step 6: Inserting inpatient data ===")
     inpatient_module = load_module("insert_inpatient_data", os.path.join(current_dir, "insert_inpatient_data.py"))
     inpatient_module.insert_inpatient_data()
-    
-    # Step 7: Insert illness data
-    print("\n=== Step 7: Inserting illness data ===")
-    illness_module = load_module("insert_illness_data", os.path.join(current_dir, "insert_illness_data.py"))
-    illness_module.insert_illness_data()
     
     # Step 8: Insert consultation and diagnosis data
     print("\n=== Step 8: Inserting consultation data ===")
