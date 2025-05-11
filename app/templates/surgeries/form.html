@@ -1,0 +1,182 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+{% if surgery %}Edit Surgery Schedule{% else %}Add New Surgery Schedule{% endif %} - Medical Clinic
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <a href="{{ url_for('main.surgery_schedules') }}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Surgery Schedules
+            </a>
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% if surgery %}Edit Surgery Schedule{% else %}Add New Surgery Schedule{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="patient_id" class="form-label">Patient <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="patient_id" name="patient_id" required
+                                    data-placeholder="Search for a patient...">
+                                    <option value="" selected disabled>Select Patient</option>
+                                    {% for patient in patients %}
+                                    <option value="{{ patient.PatientID }}" {% if surgery and
+                                        surgery.PatientID==patient.PatientID %}selected{% endif %}
+                                        data-id="{{ patient.PatientID }}"
+                                        data-dob="{{ patient.DOB.strftime('%Y-%m-%d') }}">
+                                        {{ patient.Name }} (ID: {{ patient.PatientID }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a patient.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="surgeon_id" class="form-label">Surgeon <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="surgeon_id" name="surgeon_id" required
+                                    data-placeholder="Search for a surgeon...">
+                                    <option value="" selected disabled>Select Surgeon</option>
+                                    {% for surgeon in surgeons %}
+                                    <option value="{{ surgeon.EmpID }}" {% if surgery and surgery.EmpID==surgeon.EmpID
+                                        %}selected {% elif selected_surgeon_id and selected_surgeon_id==surgeon.EmpID
+                                        %}selected{% endif %} data-specialty="{{ surgeon.Specialty }}">
+                                        {{ surgeon.personnel.Name }} ({{ surgeon.Specialty }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a surgeon.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="surgery_code" class="form-label">Surgery Type <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="surgery_code" name="surgery_code" required
+                                    data-placeholder="Search for a surgery type...">
+                                    <option value="" selected disabled>Select Surgery Type</option>
+                                    {% for type in surgery_types %}
+                                    <option value="{{ type.SurgeryCode }}" {% if surgery and
+                                        surgery.SurgeryCode==type.SurgeryCode %}selected {% elif selected_surgery_type
+                                        and selected_surgery_type==type.SurgeryCode %}selected{% endif %}
+                                        data-category="{{ type.Category.value }}">
+                                        {{ type.Name }} ({{ type.Category.value }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a surgery type.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="op_room_id" class="form-label">Operating Room <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="op_room_id" name="op_room_id" required
+                                    data-placeholder="Select an operating room...">
+                                    <option value="" selected disabled>Select Operating Room</option>
+                                    {% for room in operating_rooms %}
+                                    <option value="{{ room.OpRoomID }}" {% if surgery and
+                                        surgery.OpRoomID==room.OpRoomID %}selected{% endif %}>
+                                        Room {{ room.OpRoomID }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select an operating room.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="date" class="form-label">Surgery Date <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control datepicker" id="date" name="date"
+                                    value="{{ surgery.Date.strftime('%Y-%m-%d') if surgery and surgery.Date else '' }}"
+                                    required placeholder="Select date">
+                                <div class="invalid-feedback">
+                                    Please provide a valid date for the surgery.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> {% if surgery %}Update{% else %}Save{% endif %} Surgery
+                                Schedule
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Set page language to English
+        document.documentElement.lang = 'en';
+
+        // Initialize Select2 for all dropdowns
+        $('.select2').each(function () {
+            $(this).select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                dropdownParent: $('body')
+            });
+        });
+
+        // Initialize flatpickr for the date input
+        const dateInput = document.getElementById('date');
+        if (dateInput) {
+            const config = {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "F j, Y", // Display format: January 1, 2023
+                minDate: "today", // Only allow future dates
+                locale: {
+                    firstDayOfWeek: 0, // Start week on Sunday
+                    weekdays: {
+                        shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                        longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+                    },
+                    months: {
+                        shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        longhand: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+                    }
+                }
+            };
+
+            flatpickr(dateInput, config);
+        }
+
+        // Form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })();
+    });
+</script>
+{% endblock %}

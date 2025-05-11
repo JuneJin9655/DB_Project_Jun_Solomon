@@ -13,16 +13,13 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <a href="{{ url_for('main.surgery_types') }}" class="btn btn-info">
-                <i class="bi bi-list-ul"></i> View Surgery Types
-            </a>
-        </div>
-        <div class="col-md-6">
-            <div class="input-group">
-                <input type="text" class="form-control" id="surgerySearch" placeholder="Search surgeries...">
-                <button class="btn btn-outline-secondary" type="button">
-                    <i class="bi bi-search"></i>
-                </button>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('main.add_surgery_schedule') }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Add Surgery
+                </a>
+                <a href="{{ url_for('main.surgery_types') }}" class="btn btn-info">
+                    <i class="bi bi-list-ul"></i> View Surgery Types
+                </a>
             </div>
         </div>
     </div>
@@ -44,6 +41,7 @@
                                     <th>Surgeon</th>
                                     <th>Surgery Type</th>
                                     <th>Operating Room</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -67,6 +65,59 @@
                                         </a>
                                     </td>
                                     <td>{{ surgery.OpRoomID }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('main.edit_surgery_schedule', id=surgery.ScheduleID) }}"
+                                                class="btn btn-outline-primary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger" title="Delete"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteSurgeryModal{{ surgery.ScheduleID }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteSurgeryModal{{ surgery.ScheduleID }}"
+                                            tabindex="-1"
+                                            aria-labelledby="deleteSurgeryModalLabel{{ surgery.ScheduleID }}"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title"
+                                                            id="deleteSurgeryModalLabel{{ surgery.ScheduleID }}">
+                                                            Confirm Delete
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Are you sure you want to delete this surgery schedule?
+                                                        <ul class="mt-2">
+                                                            <li><strong>Patient:</strong> {{ surgery.patient.Name }}
+                                                            </li>
+                                                            <li><strong>Surgeon:</strong> {{
+                                                                surgery.surgeon.personnel.Name }}</li>
+                                                            <li><strong>Surgery Type:</strong> {{
+                                                                surgery.surgery_type.Name }}</li>
+                                                            <li><strong>Date:</strong> {{ surgery.Date }}</li>
+                                                        </ul>
+                                                        <p class="text-danger">This action cannot be undone.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">Cancel</button>
+                                                        <form method="POST"
+                                                            action="{{ url_for('main.delete_surgery_schedule', id=surgery.ScheduleID) }}">
+                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

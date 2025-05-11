@@ -1,0 +1,267 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+{% if prescription %}Edit Prescription{% else %}Add New Prescription{% endif %} - Medical Clinic
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <a href="{{ url_for('main.prescriptions') }}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Prescriptions
+            </a>
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">{% if prescription %}Edit Prescription{% else %}Add New Prescription{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="patient_id" class="form-label">Patient <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="patient_id" name="patient_id" {% if prescription
+                                    %}disabled{% endif %} required data-placeholder="Search for a patient...">
+                                    <option value="" selected disabled>Select Patient</option>
+                                    {% for patient in patients %}
+                                    <option value="{{ patient.PatientID }}" {% if prescription and
+                                        prescription.PatientID==patient.PatientID %}selected{% elif selected_patient_id
+                                        and selected_patient_id==patient.PatientID %}selected{% endif %}>
+                                        {{ patient.Name }} (ID: {{ patient.PatientID }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a patient.
+                                </div>
+                                {% if prescription %}
+                                <input type="hidden" name="patient_id" value="{{ prescription.PatientID }}">
+                                <small class="text-muted">Patient cannot be changed for existing prescriptions.</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="physician_id" class="form-label">Physician <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="physician_id" name="physician_id" {% if
+                                    prescription %}disabled{% endif %} required
+                                    data-placeholder="Search for a physician...">
+                                    <option value="" selected disabled>Select Physician</option>
+                                    {% for physician in physicians %}
+                                    <option value="{{ physician.EmpID }}" {% if prescription and
+                                        prescription.EmpID==physician.EmpID %}selected{% elif selected_physician_id and
+                                        selected_physician_id==physician.EmpID %}selected{% endif %}>
+                                        {{ physician.personnel.Name }} ({{ physician.Specialty }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a physician.
+                                </div>
+                                {% if prescription %}
+                                <input type="hidden" name="physician_id" value="{{ prescription.EmpID }}">
+                                <small class="text-muted">Physician cannot be changed for existing
+                                    prescriptions.</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="medication_code" class="form-label">Medication <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="medication_code" name="medication_code" {% if
+                                    prescription %}disabled{% endif %} required
+                                    data-placeholder="Search for a medication...">
+                                    <option value="" selected disabled>Select Medication</option>
+                                    {% for medication in medications %}
+                                    <option value="{{ medication.MedicationCode }}" {% if prescription and
+                                        prescription.MedicationCode==medication.MedicationCode %}selected{% elif
+                                        selected_medication_code and selected_medication_code==medication.MedicationCode
+                                        %}selected{% endif %}>
+                                        {{ medication.MedicationName }} (${{ "%.2f"|format(medication.UnitCost) }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a medication.
+                                </div>
+                                {% if prescription %}
+                                <input type="hidden" name="medication_code" value="{{ prescription.MedicationCode }}">
+                                <small class="text-muted">Medication cannot be changed for existing
+                                    prescriptions.</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="dosage" class="form-label">Dosage <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="dosage" name="dosage"
+                                    value="{{ prescription.Dosage if prescription else '' }}"
+                                    placeholder="e.g., 500mg twice daily" required>
+                                <div class="invalid-feedback">
+                                    Please provide a dosage.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="frequency" class="form-label">Frequency <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="frequency" name="frequency"
+                                    value="{{ prescription.Frequency if prescription else '' }}"
+                                    placeholder="e.g., Every 8 hours" required>
+                                <div class="invalid-feedback">
+                                    Please provide a frequency.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-secondary me-md-2">Reset</button>
+                            <button type="submit" class="btn btn-success">
+                                {% if prescription %}Update{% else %}Save{% endif %} Prescription
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if not prescription and selected_medication_code %}
+            <div class="card shadow mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Medication Information</h5>
+                </div>
+                <div class="card-body">
+                    {% set selected_med = medications|selectattr('MedicationCode', 'eq', selected_medication_code)|first
+                    %}
+                    {% if selected_med %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Name:</th>
+                                    <td>{{ selected_med.MedicationName }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Code:</th>
+                                    <td>{{ selected_med.MedicationCode }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Unit Cost:</th>
+                                    <td>${{ "%.2f"|format(selected_med.UnitCost) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Quantity On Hand:</th>
+                                    <td>
+                                        {{ selected_med.QuantityOnHand }}
+                                        {% if selected_med.QuantityOnHand <= 20 %} <span
+                                            class="badge bg-warning text-dark">Low Stock</span>
+                                            {% endif %}
+                                            {% if selected_med.QuantityOnHand == 0 %}
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                            {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Quantity On Order:</th>
+                                    <td>{{ selected_med.QuantityOnOrder }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if selected_patient_id and not prescription %}
+            <div class="card shadow mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    {% set selected_patient = patients|selectattr('PatientID', 'eq', selected_patient_id)|first %}
+                    {% if selected_patient %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Name:</th>
+                                    <td>{{ selected_patient.Name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Gender:</th>
+                                    <td>{{ selected_patient.Gender.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Date of Birth:</th>
+                                    <td>{{ selected_patient.DOB }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tr>
+                                    <th width="35%">Allergy:</th>
+                                    <td>{{ selected_patient.allergy.AllergyName if selected_patient.allergy else 'None'
+                                        }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Heart Risk Level:</th>
+                                    <td>
+                                        {% if selected_patient.HeartRiskLevel %}
+                                        <span
+                                            class="badge bg-{{ 'danger' if selected_patient.HeartRiskLevel.name == 'HIGH' else 'warning' if selected_patient.HeartRiskLevel.name == 'MODERATE' else 'success' }}">
+                                            {{ selected_patient.HeartRiskLevel.name }}
+                                        </span>
+                                        {% else %}
+                                        Not assessed
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Select2 for dropdowns
+        $('.select2').each(function () {
+            $(this).select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                dropdownParent: $('body')
+            });
+        });
+
+        // Form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })();
+    });
+</script>
+{% endblock %}

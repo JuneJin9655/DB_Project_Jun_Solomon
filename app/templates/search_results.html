@@ -1,0 +1,256 @@
+{% extends 'layout.html' %}
+
+{% block title %}Search Results - Newark Medical Associates{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Search Results</h1>
+        </div>
+    </div>
+
+    <!-- Global Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <form action="{{ url_for('main.global_search') }}" method="GET" class="mb-4">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" value="{{ search_term }}"
+                        placeholder="Search for patients, physicians, etc.">
+                    <select name="type" class="form-select" style="max-width: 150px;">
+                        <option value="all" {% if search_type=='all' %}selected{% endif %}>All</option>
+                        <option value="patients" {% if search_type=='patients' %}selected{% endif %}>Patients</option>
+                        <option value="physicians" {% if search_type=='physicians' %}selected{% endif %}>Physicians
+                        </option>
+                        <option value="medications" {% if search_type=='medications' %}selected{% endif %}>Medications
+                        </option>
+                    </select>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Results for "{{ search_term }}"</h5>
+                </div>
+                <div class="card-body">
+                    {% if all_results %}
+                    <ul class="nav nav-tabs" id="searchTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all"
+                                type="button" role="tab" aria-controls="all" aria-selected="true">
+                                All ({{ all_results|count }})
+                            </button>
+                        </li>
+                        {% if patients %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients"
+                                type="button" role="tab" aria-controls="patients" aria-selected="false">
+                                Patients ({{ patients|count }})
+                            </button>
+                        </li>
+                        {% endif %}
+                        {% if physicians %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="physicians-tab" data-bs-toggle="tab"
+                                data-bs-target="#physicians" type="button" role="tab" aria-controls="physicians"
+                                aria-selected="false">
+                                Physicians ({{ physicians|count }})
+                            </button>
+                        </li>
+                        {% endif %}
+                        {% if medications %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="medications-tab" data-bs-toggle="tab"
+                                data-bs-target="#medications" type="button" role="tab" aria-controls="medications"
+                                aria-selected="false">
+                                Medications ({{ medications|count }})
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <div class="tab-content" id="searchTabContent">
+                        <!-- All Results Tab -->
+                        <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                            <div class="table-responsive mt-3">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Details</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in all_results %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-{{
+                                                    'primary' if result.type == 'patient' else
+                                                    'info' if result.type == 'physician' else
+                                                    'success' if result.type == 'medication' else
+                                                    'secondary'
+                                                    }}">
+                                                    {{ result.type|capitalize }}
+                                                </span>
+                                            </td>
+                                            <td>{{ result.id }}</td>
+                                            <td>{{ result.name }}</td>
+                                            <td>{{ result.details }}</td>
+                                            <td>
+                                                <a href="{{ result.url }}" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Patients Tab -->
+                        {% if patients %}
+                        <div class="tab-pane fade" id="patients" role="tabpanel" aria-labelledby="patients-tab">
+                            <div class="table-responsive mt-3">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Gender</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for patient in patients %}
+                                        <tr>
+                                            <td>{{ patient.PatientID }}</td>
+                                            <td>{{ patient.Name }}</td>
+                                            <td>{{ patient.Gender.value }}</td>
+                                            <td>
+                                                {% if patient.IsInpatient %}
+                                                <span class="badge bg-warning">Inpatient</span>
+                                                {% else %}
+                                                <span class="badge bg-success">Outpatient</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('main.patient_detail', id=patient.PatientID) }}"
+                                                    class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Physicians Tab -->
+                        {% if physicians %}
+                        <div class="tab-pane fade" id="physicians" role="tabpanel" aria-labelledby="physicians-tab">
+                            <div class="table-responsive mt-3">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Specialty</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for physician in physicians %}
+                                        <tr>
+                                            <td>{{ physician.EmpID }}</td>
+                                            <td>{{ physician.personnel.Name }}</td>
+                                            <td>{{ physician.Specialty }}</td>
+                                            <td>
+                                                {% if physician.IsActive %}
+                                                <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('main.physician_detail', id=physician.EmpID) }}"
+                                                    class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Medications Tab -->
+                        {% if medications %}
+                        <div class="tab-pane fade" id="medications" role="tabpanel" aria-labelledby="medications-tab">
+                            <div class="table-responsive mt-3">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Stock</th>
+                                            <th>Cost</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for medication in medications %}
+                                        <tr>
+                                            <td>{{ medication.MedicationCode }}</td>
+                                            <td>{{ medication.MedicationName }}</td>
+                                            <td>
+                                                {{ medication.QuantityOnHand }}
+                                                {% if medication.QuantityOnHand <= 20 %} <span
+                                                    class="badge bg-warning text-dark">Low Stock</span>
+                                                    {% endif %}
+                                                    {% if medication.QuantityOnHand == 0 %}
+                                                    <span class="badge bg-danger">Out of Stock</span>
+                                                    {% endif %}
+                                            </td>
+                                            <td>${{ "%.2f"|format(medication.UnitCost) }}</td>
+                                            <td>
+                                                <a href="{{ url_for('main.medication_detail', code=medication.MedicationCode) }}"
+                                                    class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No results found for "{{ search_term }}".
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -28,7 +28,33 @@ python -m tests.setup_complete_database
 flask run
 ```
 
+## Migration Step
+
+
+```bash
+# Initialize the migration environment (if not already initialized)
+flask db init
+
+# Create migration script
+flask db migrate -m "Describe your changes"
+
+# Migrate application to database
+flask db upgrade
+
+# Rollback migration (if needed)
+flask db downgrade
+
+# View migration history
+flask db history
+
+
+```
 Access the application at: http://127.0.0.1:5000/
+
+flask db init
+
+flask db migrate -m ""
+
 
 ## Troubleshooting
 

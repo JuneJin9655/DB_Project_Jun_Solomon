@@ -1,0 +1,126 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+{% if medication %}Edit Medication{% else %}Add New Medication{% endif %} - Medical Clinic
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <a href="{{ url_for('main.medications') }}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Medications
+            </a>
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% if medication %}Edit Medication{% else %}Add New Medication{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="medication_code" class="form-label">Medication Code <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="medication_code" name="medication_code"
+                                    value="{{ medication.MedicationCode if medication else '' }}" {% if medication
+                                    %}readonly{% endif %} required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid medication code.
+                                </div>
+                                {% if medication %}
+                                <small class="text-muted">Medication code cannot be changed once created.</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="medication_name" class="form-label">Medication Name <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="medication_name" name="medication_name"
+                                    value="{{ medication.MedicationName if medication else '' }}" required>
+                                <div class="invalid-feedback">
+                                    Please provide a medication name.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="quantity_on_hand" class="form-label">Quantity On Hand <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="quantity_on_hand" name="quantity_on_hand"
+                                    value="{{ medication.QuantityOnHand if medication else 0 }}" min="0" required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid quantity.
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="quantity_on_order" class="form-label">Quantity On Order <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="quantity_on_order"
+                                    name="quantity_on_order"
+                                    value="{{ medication.QuantityOnOrder if medication else 0 }}" min="0" required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid quantity.
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="unit_cost" class="form-label">Unit Cost ($) <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="unit_cost" name="unit_cost"
+                                    value="{{ medication.UnitCost if medication else '' }}" step="0.01" min="0.01"
+                                    required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid unit cost.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="ytd_usage" class="form-label">Year-to-Date Usage <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="ytd_usage" name="ytd_usage"
+                                    value="{{ medication.YearToDateUsage if medication else 0 }}" min="0" required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid usage value.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-secondary me-md-2">Reset</button>
+                            <button type="submit" class="btn btn-primary">
+                                {% if medication %}Update{% else %}Save{% endif %} Medication
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation
+    (function () {
+        'use strict'
+
+        // Fetch all forms we want to apply validation styles to
+        var forms = document.querySelectorAll('.needs-validation')
+
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+</script>
+{% endblock %}

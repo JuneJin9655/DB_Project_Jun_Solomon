@@ -10,8 +10,18 @@
                 <i class="bi bi-arrow-left"></i> Back to Surgeons
             </a>
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Surgeon Information</h5>
+                    <div>
+                        <a href="{{ url_for('main.edit_surgeon', id=surgeon.EmpID) }}" class="btn btn-light btn-sm">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <button type="button" class="btn btn-danger btn-sm ms-2" data-bs-toggle="modal"
+                            data-bs-target="#deleteSurgeonModal">
+                            <i class="bi bi-{% if surgeon.IsActive %}dash-circle{% else %}check-circle{% endif %}"></i>
+                            {% if surgeon.IsActive %}Deactivate{% else %}Reactivate{% endif %}
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -20,7 +30,14 @@
                             <p><strong>ID:</strong> {{ surgeon.EmpID }}</p>
                             <p><strong>Specialty:</strong> {{ surgeon.Specialty }}</p>
                             <p><strong>Contract Type:</strong> {{ surgeon.ContractType }}</p>
-                            <p><strong>Contract Length:</strong> {{ surgeon.ContractLength }} years</p>
+                            <p><strong>Contract Length:</strong> {{ surgeon.ContractLength }} months</p>
+                            <p><strong>Status:</strong>
+                                {% if surgeon.IsActive %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </p>
                         </div>
                         <div class="col-md-6">
                             <h4>Contact Information</h4>
@@ -28,6 +45,7 @@
                             <p><strong>Phone:</strong> {{ surgeon.personnel.Phone }}</p>
                             <p><strong>Gender:</strong> {{ surgeon.personnel.Gender.value }}</p>
                             <p><strong>Clinic:</strong> {{ surgeon.personnel.clinic.ClinicName }}</p>
+                            <p><strong>Salary:</strong> ${{ surgeon.personnel.Salary }}</p>
                         </div>
                     </div>
                 </div>
@@ -38,8 +56,13 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-success text-white">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Scheduled Surgeries ({{ surgeries|length }})</h5>
+                    {% if surgeon.IsActive %}
+                    <a href="{{ url_for('main.add_surgery_schedule_for_surgeon', id=surgeon.EmpID) }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-circle"></i> Schedule Surgery
+                    </a>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     {% if surgeries %}
@@ -114,6 +137,52 @@
         data-counts='{{ surgery_types.values()|list|tojson }}'>
     </div>
     {% endif %}
+</div>
+
+<!-- Delete Surgeon Modal -->
+<div class="modal fade" id="deleteSurgeonModal" tabindex="-1" aria-labelledby="deleteSurgeonModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteSurgeonModalLabel">
+                    {% if not surgeon.IsActive %}
+                    Reactivate Surgeon
+                    {% else %}
+                    Deactivate Surgeon
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if not surgeon.IsActive %}
+                <p>Are you sure you want to reactivate surgeon <strong>{{ surgeon.personnel.Name }}</strong>?</p>
+                {% else %}
+                <p>Are you sure you want to deactivate surgeon <strong>{{ surgeon.personnel.Name }}</strong>?</p>
+
+                {% if surgeries %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    This surgeon has {{ surgeries|length }} scheduled surgeries. Please make sure these surgeries are
+                    addressed.
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('main.toggle_surgeon_status', id=surgeon.EmpID) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">
+                        {% if not surgeon.IsActive %}
+                        Reactivate Surgeon
+                        {% else %}
+                        Deactivate Surgeon
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

@@ -16,8 +16,11 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">All Surgeons</h5>
+                    <a href="{{ url_for('main.add_surgeon') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-circle"></i> Add Surgeon
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -28,7 +31,8 @@
                                     <th>Name</th>
                                     <th>Specialty</th>
                                     <th>Contract Type</th>
-                                    <th>Contract Length (Years)</th>
+                                    <th>Contract Length (Months)</th>
+                                    <th>Status</th>
                                     <th>Scheduled Surgeries</th>
                                     <th>Actions</th>
                                 </tr>
@@ -42,11 +46,20 @@
                                     <td>{{ surgeon.ContractType }}</td>
                                     <td>{{ surgeon.ContractLength }}</td>
                                     <td>
+                                        {% if surgeon.IsActive %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
                                         <span class="badge bg-info">{{ surgeon.surgery_schedules|length }}</span>
                                     </td>
                                     <td>
                                         <a href="{{ url_for('main.surgeon_detail', id=surgeon.EmpID) }}"
                                             class="btn btn-sm btn-primary">Details</a>
+                                        <a href="{{ url_for('main.edit_surgeon', id=surgeon.EmpID) }}"
+                                            class="btn btn-sm btn-secondary">Edit</a>
                                     </td>
                                 </tr>
                                 {% endfor %}

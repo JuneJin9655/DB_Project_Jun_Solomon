@@ -17,7 +17,6 @@ instance/
 
 # Environment variables
 .env
-# .flaskenv - 允许提交这个文件，因为它包含应用程序的基本配置
 
 # IDE configuration
 .idea/

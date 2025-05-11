@@ -22,6 +22,11 @@
                         {% if patient.IsEmployee %}
                         <span class="badge bg-info">Employee</span>
                         {% endif %}
+
+                        <a href="{{ url_for('main.edit_patient', id=patient.PatientID) }}"
+                            class="btn btn-sm btn-light ms-2">
+                            <i class="bi bi-pencil"></i> Edit Patient
+                        </a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -194,6 +199,13 @@
 
                 <!-- Prescriptions Tab -->
                 <div class="tab-pane fade" id="prescriptions" role="tabpanel">
+                    <div class="mb-3">
+                        <a href="{{ url_for('main.add_prescription_for_patient', id=patient.PatientID) }}"
+                            class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Add New Prescription
+                        </a>
+                    </div>
+
                     {% if prescriptions %}
                     <div class="table-responsive">
                         <table class="table table-striped">
@@ -204,6 +216,7 @@
                                     <th>Dosage</th>
                                     <th>Frequency</th>
                                     <th>Physician</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -214,6 +227,18 @@
                                     <td>{{ prescription.Dosage }}</td>
                                     <td>{{ prescription.Frequency }}</td>
                                     <td>{{ prescription.physician.personnel.Name }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('main.prescription_detail', id=prescription.PrescriptionID) }}"
+                                                class="btn btn-sm btn-info">
+                                                <i class="bi bi-eye"></i> Details
+                                            </a>
+                                            <a href="{{ url_for('main.edit_prescription', id=prescription.PrescriptionID) }}"
+                                                class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

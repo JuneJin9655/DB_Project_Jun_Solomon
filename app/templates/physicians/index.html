@@ -13,9 +13,23 @@
 
     <div class="row mb-4">
         <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a href="{{ url_for('main.add_physician') }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Add New Physician
+                </a>
+
+                <!-- Search Form - Removed in favor of global search -->
+            </div>
+
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">All Physicians</h5>
+                    <h5 class="mb-0">
+                        {% if search_query %}
+                        Search Results for "{{ search_query }}" ({{ physicians|length }} found)
+                        {% else %}
+                        All Physicians
+                        {% endif %}
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -55,8 +69,52 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('main.physician_detail', id=physician.EmpID) }}"
-                                            class="btn btn-sm btn-primary">Details</a>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('main.physician_detail', id=physician.EmpID) }}"
+                                                class="btn btn-sm btn-primary">Details</a>
+                                            <a href="{{ url_for('main.edit_physician', id=physician.EmpID) }}"
+                                                class="btn btn-sm btn-warning">Edit</a>
+                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                                data-bs-target="#deletePhysicianModal{{ physician.EmpID }}">
+                                                Delete
+                                            </button>
+                                        </div>
+
+                                        <!-- Delete Confirmation Modal -->
+                                        <div class="modal fade" id="deletePhysicianModal{{ physician.EmpID }}"
+                                            tabindex="-1"
+                                            aria-labelledby="deletePhysicianModalLabel{{ physician.EmpID }}"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title"
+                                                            id="deletePhysicianModalLabel{{ physician.EmpID }}">
+                                                            Confirm Deletion
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Are you sure you want to delete physician: <strong>{{
+                                                            physician.personnel.Name }}</strong>?
+                                                        <p class="text-danger mt-3">
+                                                            <small>This action cannot be undone. Patients will be
+                                                                reassigned according to business rules.</small>
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">Cancel</button>
+                                                        <form
+                                                            action="{{ url_for('main.delete_physician', id=physician.EmpID) }}"
+                                                            method="POST" class="d-inline">
+                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}

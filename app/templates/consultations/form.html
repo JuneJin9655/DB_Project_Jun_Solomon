@@ -1,0 +1,298 @@
+{% extends "layout.html" %}
+
+{% block title %}
+{% if consultation %}Edit Consultation{% else %}Add New Consultation{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.home') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.consultations') }}">Consultations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {% if consultation %}Edit Consultation #{{ consultation.ConsultationID }}{% else %}Add New
+                        Consultation{% endif %}
+                    </li>
+                </ol>
+            </nav>
+
+            <h1 class="mb-4">
+                {% if consultation %}Edit Consultation #{{ consultation.ConsultationID }}{% else %}Add New
+                Consultation{% endif %}
+            </h1>
+
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Consultation Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="patient_id" class="form-label">Patient <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="patient_id" name="patient_id" required {% if
+                                    consultation %}{% if not can_change_patient %}disabled{% endif %}{% endif %}
+                                    data-placeholder="Search for a patient...">
+                                    <option value="" {% if not consultation %}selected{% endif %} disabled>Select a
+                                        patient</option>
+                                    {% for patient in patients %}
+                                    <option value="{{ patient.PatientID }}" {% if consultation and
+                                        consultation.PatientID==patient.PatientID %}selected{% endif %}
+                                        data-id="{{ patient.PatientID }}" data-phone="{{ patient.Phone }}"
+                                        data-dob="{{ patient.DOB.strftime('%Y-%m-%d') }}">
+                                        {{ patient.Name }} (ID: {{ patient.PatientID }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if consultation and not can_change_patient %}
+                                <input type="hidden" name="patient_id" value="{{ consultation.PatientID }}">
+                                <div class="form-text text-muted">Patient cannot be changed for existing consultations
+                                </div>
+                                {% endif %}
+                                <div class="invalid-feedback">
+                                    Please select a patient
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="physician_id" class="form-label">Physician <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select select2" id="physician_id" name="physician_id" required {% if
+                                    consultation %}{% if not can_change_physician %}disabled{% endif %}{% endif %}
+                                    data-placeholder="Search for a physician...">
+                                    <option value="" {% if not consultation %}selected{% endif %} disabled>Select a
+                                        physician</option>
+                                    {% for physician in physicians %}
+                                    <option value="{{ physician.EmpID }}" {% if consultation and
+                                        consultation.EmpID==physician.EmpID %}selected{% endif %}
+                                        data-id="{{ physician.EmpID }}" data-specialty="{{ physician.Specialty }}">
+                                        {{ physician.personnel.Name }} ({{ physician.Specialty }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if consultation and not can_change_physician %}
+                                <input type="hidden" name="physician_id" value="{{ consultation.EmpID }}">
+                                <div class="form-text text-muted">Physician cannot be changed for existing consultations
+                                </div>
+                                {% endif %}
+                                <div class="invalid-feedback">
+                                    Please select a physician
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="consultation_date" class="form-label">Consultation Date <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control datepicker" id="consultation_date"
+                                    name="consultation_date"
+                                    value="{{ consultation.ConsultationDate.strftime('%Y-%m-%d') if consultation and consultation.ConsultationDate else '' }}"
+                                    required {% if consultation %}{% if not can_change_date %}readonly{% endif %}{%
+                                    endif %} placeholder="Select date">
+                                {% if consultation and not can_change_date %}
+                                <input type="hidden" name="consultation_date"
+                                    value="{{ consultation.ConsultationDate.strftime('%Y-%m-%d') }}">
+                                <div class="form-text text-muted">Date cannot be changed for existing consultations
+                                </div>
+                                {% endif %}
+                                <div class="invalid-feedback">
+                                    Please select a consultation date
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="notes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="notes" name="notes"
+                                    rows="3">{{ consultation.Notes if consultation and consultation.Notes else '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Diagnoses</h5>
+                                <p class="mb-0 small">Select illnesses diagnosed during this consultation</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 10%">Select</th>
+                                                        <th style="width: 30%">Illness Code</th>
+                                                        <th style="width: 60%">Description</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for illness in illnesses %}
+                                                    <tr>
+                                                        <td>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                    name="illnesses[]" value="{{ illness.IllnessCode }}"
+                                                                    id="illness_{{ illness.IllnessCode }}" {% if
+                                                                    consultation and illness.IllnessCode in
+                                                                    diagnosed_illnesses %}checked{% endif %}>
+                                                            </div>
+                                                        </td>
+                                                        <td>{{ illness.IllnessCode }}</td>
+                                                        <td>{{ illness.Description }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i>
+                                    {% if consultation %}Update Consultation{% else %}Create Consultation{% endif %}
+                                </button>
+                                <a href="{{ url_for('main.consultations') }}" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Bootstrap form validation
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+
+    // Custom date picker to ensure English language display
+    document.addEventListener('DOMContentLoaded', function () {
+        // Set page language to English
+        document.documentElement.lang = 'en';
+
+        // Initialize Select2 for patient dropdown
+        $('#patient_id').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            templateResult: formatPatient,
+            templateSelection: formatPatientSelection,
+            dropdownParent: $('body'),
+            minimumInputLength: 1,  // Require at least 1 character to trigger search
+            placeholder: "Search for a patient by name or ID..."
+        });
+
+        // Initialize Select2 for physician dropdown
+        $('#physician_id').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            templateResult: formatPhysician,
+            templateSelection: formatPhysicianSelection,
+            dropdownParent: $('body'),
+            minimumInputLength: 1,  // Require at least 1 character to trigger search
+            placeholder: "Search for a physician by name or specialty..."
+        });
+
+        // Format patient options in dropdown
+        function formatPatient(patient) {
+            if (!patient.id) return patient.text;
+
+            var $container = $(
+                '<div class="select2-result-patient">' +
+                '<div class="select2-result-patient__name">' + patient.text + '</div>'
+            );
+
+            if (patient.element && $(patient.element).attr('data-phone')) {
+                $container.append('<div class="select2-result-patient__phone text-muted small">Phone: ' +
+                    $(patient.element).attr('data-phone') + '</div>');
+            }
+
+            if (patient.element && $(patient.element).attr('data-dob')) {
+                $container.append('<div class="select2-result-patient__dob text-muted small">DOB: ' +
+                    $(patient.element).attr('data-dob') + '</div>');
+            }
+
+            $container.append('</div>');
+            return $container;
+        }
+
+        // Format patient selection (what appears in the dropdown after selection)
+        function formatPatientSelection(patient) {
+            if (!patient.id) return patient.text;
+            return patient.text;
+        }
+
+        // Format physician options in dropdown
+        function formatPhysician(physician) {
+            if (!physician.id) return physician.text;
+
+            var $container = $(
+                '<div class="select2-result-physician">' +
+                '<div class="select2-result-physician__name">' + physician.text + '</div>'
+            );
+
+            if (physician.element && $(physician.element).attr('data-specialty')) {
+                $container.append('<div class="select2-result-physician__specialty text-muted small">Specialty: ' +
+                    $(physician.element).attr('data-specialty') + '</div>');
+            }
+
+            $container.append('</div>');
+            return $container;
+        }
+
+        // Format physician selection (what appears in the dropdown after selection)
+        function formatPhysicianSelection(physician) {
+            if (!physician.id) return physician.text;
+            return physician.text;
+        }
+
+        // Initialize flatpickr for the date input
+        const dateInput = document.getElementById('consultation_date');
+        if (dateInput) {
+            const config = {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "F j, Y", // Display format: January 1, 2023
+                locale: {
+                    firstDayOfWeek: 0, // Start week on Sunday
+                    weekdays: {
+                        shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                        longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+                    },
+                    months: {
+                        shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        longhand: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+                    }
+                }
+            };
+
+            // Check if the date input should be read-only
+            const isReadonly = dateInput.hasAttribute('readonly');
+            if (isReadonly) {
+                config.clickOpens = false; // Disable opening the picker if readonly
+            }
+
+            flatpickr(dateInput, config);
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -38,6 +38,15 @@ def balance_physicians_patients():
     
     print("\nBalancing physician-patient relationships...")
     
+    # Check if we have all required data
+    if not physicians:
+        print("No physicians found. Cannot balance physician-patient relationships.")
+        return
+        
+    if not patients:
+        print("No patients found. Cannot balance physician-patient relationships.")
+        return
+    
     # Track how many patients each physician has
     physician_patients = {}
     for physician in physicians:
@@ -93,6 +102,15 @@ def balance_nurses_inpatients():
     
     print("\nBalancing nurse-inpatient relationships...")
     
+    # Check if we have all required data
+    if not nurses:
+        print("No nurses found. Cannot balance nurse-inpatient relationships.")
+        return
+        
+    if not inpatients:
+        print("No inpatients found. Cannot balance nurse-inpatient relationships.")
+        return
+    
     # Track how many inpatients each nurse has
     nurse_inpatients = {}
     for nurse in nurses:
@@ -147,6 +165,19 @@ def balance_surgeons_surgeries():
     operating_rooms = db.session.query(db.func.max(SurgerySchedule.OpRoomID)).scalar() or 1
     
     print("\nBalancing surgeon-surgery relationships...")
+    
+    # Check if we have all required data
+    if not surgeons:
+        print("No surgeons found. Cannot balance surgeon-surgery relationships.")
+        return
+        
+    if not patients:
+        print("No patients found. Cannot balance surgeon-surgery relationships.")
+        return
+        
+    if not surgery_types:
+        print("No surgery types found. Cannot balance surgeon-surgery relationships.")
+        return
     
     # Track scheduled surgeries per surgeon
     surgeon_surgeries = {}
@@ -204,6 +235,15 @@ def balance_surgery_types():
     
     print("\nBalancing surgery type usage...")
     
+    # Check if we have all required data
+    if not patients:
+        print("No patients found. Cannot balance surgery types.")
+        return
+        
+    if not surgeons:
+        print("No surgeons found. Cannot balance surgery types.")
+        return
+    
     # Track which surgery types are used
     surgery_type_usage = {}
     for surgery_type in surgery_types:
@@ -258,6 +298,15 @@ def balance_patient_consultations():
     illnesses = Illness.query.all()
     
     print("\nBalancing patient consultations...")
+    
+    # Check if we have all required data
+    if not patients:
+        print("No patients found. Cannot balance consultations.")
+        return
+        
+    if not physicians:
+        print("No physicians found. Cannot balance consultations.")
+        return
     
     # Track consultations per patient
     patient_consultations = {}
@@ -328,6 +377,15 @@ def balance_patient_prescriptions():
     medications = Medication.query.all()
     
     print("\nBalancing patient prescriptions...")
+    
+    # Check if we have all required data
+    if not patients:
+        print("No patients found. Cannot balance prescriptions.")
+        return
+        
+    if not physicians:
+        print("No physicians found. Cannot balance prescriptions.")
+        return
     
     # Skip if no medications available
     if not medications:

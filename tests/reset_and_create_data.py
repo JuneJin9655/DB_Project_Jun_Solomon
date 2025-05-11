@@ -70,6 +70,15 @@ def create_new_data():
         except Exception as e:
             print(f"Error running {script}: {e}")
 
+# Add this function to fix the setup_complete_database.py script
+def reset_and_create_data():
+    """Run both reset_database and create_new_data functions"""
+    print("Resetting database...")
+    reset_database()
+    print("\nCreating new data...")
+    create_new_data()
+    print("\nCompleted database reset and data creation")
+
 if __name__ == "__main__":
     print("Resetting database...")
     reset_database()

@@ -129,8 +129,12 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
-            <div class="card-header bg-warning text-dark">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Scheduled Surgeries ({{ surgeries|length }})</h5>
+                <a href="{{ url_for('main.add_surgery_schedule_for_type', code=surgery_type.SurgeryCode) }}"
+                    class="btn btn-success btn-sm">
+                    <i class="bi bi-plus-circle"></i> Schedule Surgery
+                </a>
             </div>
             <div class="card-body">
                 {% if surgeries %}

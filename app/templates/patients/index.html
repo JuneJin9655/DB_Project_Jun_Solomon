@@ -13,17 +13,14 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <a href="/inpatients" class="btn btn-warning">
+            <a href="{{ url_for('main.inpatients') }}" class="btn btn-warning">
                 <i class="bi bi-hospital"></i> View Inpatients
             </a>
         </div>
-        <div class="col-md-6">
-            <div class="input-group">
-                <input type="text" class="form-control" id="patientSearch" placeholder="Search patients...">
-                <button class="btn btn-outline-secondary" type="button">
-                    <i class="bi bi-search"></i>
-                </button>
-            </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('main.add_patient') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add New Patient
+            </a>
         </div>
     </div>
 
@@ -79,8 +76,12 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('main.patient_detail', id=patient.PatientID) }}"
-                                            class="btn btn-sm btn-primary">Details</a>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('main.patient_detail', id=patient.PatientID) }}"
+                                                class="btn btn-sm btn-primary">Details</a>
+                                            <a href="{{ url_for('main.edit_patient', id=patient.PatientID) }}"
+                                                class="btn btn-sm btn-warning">Edit</a>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -92,25 +93,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.getElementById('patientSearch').addEventListener('keyup', function () {
-        const searchTerm = this.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr');
-
-        rows.forEach(row => {
-            const name = row.cells[1].textContent.toLowerCase();
-            const id = row.cells[0].textContent.toLowerCase();
-            const physician = row.cells[4].textContent.toLowerCase();
-
-            if (name.includes(searchTerm) || id.includes(searchTerm) || physician.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
-</script>
 {% endblock %}

@@ -9,6 +9,7 @@
             <a href="{{ url_for('main.physicians') }}" class="btn btn-secondary mb-3">
                 <i class="bi bi-arrow-left"></i> Back to Physicians
             </a>
+
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Physician Information</h5>
@@ -145,8 +146,14 @@
 
         <div class="col-md-6 mb-4">
             <div class="card">
-                <div class="card-header bg-warning text-dark">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Recent Prescriptions ({{ prescriptions|length }})</h5>
+                    {% if physician.IsActive %}
+                    <a href="{{ url_for('main.add_prescription_by_physician', id=physician.EmpID) }}"
+                        class="btn btn-sm btn-success">
+                        <i class="bi bi-plus-circle"></i> Add Prescription
+                    </a>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     {% if prescriptions %}
@@ -157,6 +164,7 @@
                                     <th>ID</th>
                                     <th>Patient</th>
                                     <th>Medication</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -165,12 +173,19 @@
                                     <td>{{ prescription.PrescriptionID }}</td>
                                     <td>{{ prescription.patient.Name }}</td>
                                     <td>{{ prescription.medication.MedicationName }}</td>
+                                    <td>
+                                        <a href="{{ url_for('main.prescription_detail', id=prescription.PrescriptionID) }}"
+                                            class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                         {% if prescriptions|length > 5 %}
-                        <a href="#" class="btn btn-sm btn-outline-primary mt-2">View All Prescriptions</a>
+                        <a href="{{ url_for('main.prescriptions') }}" class="btn btn-sm btn-outline-primary mt-2">View
+                            All Prescriptions</a>
                         {% endif %}
                     </div>
                     {% else %}

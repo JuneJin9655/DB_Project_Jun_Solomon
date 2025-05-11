@@ -1,0 +1,125 @@
+{% extends 'layout.html' %}
+
+{% block title %}{% if surgeon %}Edit Surgeon{% else %}Add New Surgeon{% endif %} - Newark Medical Associates{% endblock
+%}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <a href="{{ url_for('main.surgeons') }}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Surgeons
+            </a>
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% if surgeon %}Edit Surgeon{% else %}Add New Surgeon{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST"
+                        action="{% if surgeon %}{{ url_for('main.edit_surgeon', id=surgeon.EmpID) }}{% else %}{{ url_for('main.add_surgeon') }}{% endif %}">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h4>Personnel Information</h4>
+                                {% if not surgeon %}
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Name *</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address *</label>
+                                    <textarea class="form-control" id="address" name="address" rows="3"
+                                        required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="gender" class="form-label">Gender *</label>
+                                    <select class="form-select" id="gender" name="gender" required>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone *</label>
+                                    <input type="text" class="form-control" id="phone" name="phone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="salary" class="form-label">Salary</label>
+                                    <input type="number" class="form-control" id="salary" name="salary" min="25000"
+                                        max="300000">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="ssn" class="form-label">SSN *</label>
+                                    <input type="text" class="form-control" id="ssn" name="ssn" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="clinic_id" class="form-label">Clinic *</label>
+                                    <select class="form-select" id="clinic_id" name="clinic_id" required>
+                                        {% for clinic in clinics %}
+                                        <option value="{{ clinic.ClinicID }}">{{ clinic.ClinicName }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <h4>Surgeon Specific Information</h4>
+                                <div class="mb-3">
+                                    <label for="specialty" class="form-label">Specialty *</label>
+                                    <input type="text" class="form-control" id="specialty" name="specialty"
+                                        value="{% if surgeon %}{{ surgeon.Specialty }}{% endif %}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contract_length" class="form-label">Contract Length (months) *</label>
+                                    <input type="number" class="form-control" id="contract_length"
+                                        name="contract_length"
+                                        value="{% if surgeon %}{{ surgeon.ContractLength }}{% endif %}" min="1"
+                                        required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contract_type" class="form-label">Contract Type *</label>
+                                    <select class="form-select" id="contract_type" name="contract_type" required>
+                                        <option value="Full-time" {% if surgeon and surgeon.ContractType=='Full-time'
+                                            %}selected{% endif %}>Full-time</option>
+                                        <option value="Part-time" {% if surgeon and surgeon.ContractType=='Part-time'
+                                            %}selected{% endif %}>Part-time</option>
+                                        <option value="Contractor" {% if surgeon and surgeon.ContractType=='Contractor'
+                                            %}selected{% endif %}>Contractor</option>
+                                        <option value="Temporary" {% if surgeon and surgeon.ContractType=='Temporary'
+                                            %}selected{% endif %}>Temporary</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {%
+                                        if not surgeon or surgeon.IsActive %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">Active Status</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if surgeon %}Update Surgeon{% else %}Add Surgeon{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<!-- Initialize select2 for enhanced dropdowns -->
+<script>
+    $(document).ready(function () {
+        $('#clinic_id').select2({
+            placeholder: "Select a clinic"
+        });
+
+        $('#contract_type').select2({
+            placeholder: "Select contract type"
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

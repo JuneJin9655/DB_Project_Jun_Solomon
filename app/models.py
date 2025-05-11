@@ -143,6 +143,10 @@ class Nurse(db.Model):
     
     @validates('inpatients')
     def validate_inpatients(self, key, inpatient):
+        # Skip validation if the _skip_inpatient_check flag is set
+        if hasattr(self, '_skip_inpatient_check') and self._skip_inpatient_check:
+            return inpatient
+            
         # Validate that a nurse attends to at least 5 inpatients
         if len(self.inpatients) < 5:
             raise ValueError("A nurse must attend to at least 5 inpatients")
@@ -164,6 +168,7 @@ class Surgeon(db.Model):
     ContractLength = db.Column(db.Integer, nullable=False)
     ContractType = db.Column(db.String(50), nullable=False)
     Specialty = db.Column(db.String(100), nullable=False)
+    IsActive = db.Column(db.Boolean, default=True)
     
     # Relationships
     personnel = relationship("ClinicPersonnel", back_populates="surgeon")
@@ -299,6 +304,7 @@ class Consultation(db.Model):
     PatientID = db.Column(db.Integer, db.ForeignKey('Patient.PatientID'), nullable=False)
     EmpID = db.Column(db.Integer, db.ForeignKey('Physician.EmpID'), nullable=False)
     ConsultationDate = db.Column(db.Date, nullable=False)
+    Notes = db.Column(db.Text, nullable=True)
     
     # Relationships
     patient = relationship("Patient", back_populates="consultations", overlaps="diagnoses")
@@ -421,12 +427,11 @@ class Illness(db.Model):
 # Event listeners
 @event.listens_for(Physician, 'before_delete')
 def physician_before_delete(mapper, connection, physician):
-    # If the physician is active, assign their patients to the chief of staff
-    if physician.IsActive:
-        chief = Physician.query.filter_by(IsChief=True).first()
-        if chief and chief.EmpID != physician.EmpID:
-            for patient in physician.patients:
-                patient.PrimaryPhysicianID = chief.EmpID
+    """This event is no longer responsible for patient reassignment.
+    Patient reassignment is now handled in the route directly before deletion.
+    This ensures we can handle the UI feedback appropriately."""
+    # Intentionally left empty to avoid conflicts with the routes.py implementation
+    pass
 
 @event.listens_for(Nurse, 'before_delete')
 def nurse_before_delete(mapper, connection, nurse):
@@ -439,12 +444,6 @@ def nurse_before_delete(mapper, connection, nurse):
 def patient_before_save(mapper, connection, patient):
     # Update heart risk level
     patient.HeartRiskLevel = patient.calculate_heart_risk()
-
-@event.listens_for(Physician, 'before_delete')
-def check_physician_patients(mapper, connection, physician):
-    # Validate that a physician has at least 7 patients
-    if len(physician.patients) < 7:
-        raise ValueError("A physician must have at least 7 patients")
 
 @event.listens_for(Surgeon, 'before_delete')
 def check_surgeon_surgeries(mapper, connection, surgeon):
