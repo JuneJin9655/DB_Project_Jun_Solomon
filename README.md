@@ -1,5 +1,7 @@
 # Medical Clinic Database Management System
 
+# Python Version 3.11
+
 ## Quick Start Guide
 
 ```bash
@@ -30,7 +32,6 @@ flask run
 
 ## Migration Step
 
-
 ```bash
 # Initialize the migration environment (if not already initialized)
 flask db init
@@ -49,21 +50,23 @@ flask db history
 
 
 ```
+
 Access the application at: http://127.0.0.1:5000/
 
 flask db init
 
 flask db migrate -m ""
 
-
 ## Troubleshooting
 
 For nursing unit display issues:
+
 ```bash
 python -m tests.update_nurse_nursing_units
 python -m tests.update_inpatient_nursing_units
 ```
 
 ## Authors
+
 - Jun Jin
 - Solomon Okine
