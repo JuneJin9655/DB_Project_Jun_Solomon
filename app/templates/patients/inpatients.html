@@ -2,6 +2,15 @@
 
 {% block title %}Inpatients - Newark Medical Associates{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Additional styling for unit filter */
+    .unit-filter-wrapper {
+        min-width: 200px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">
@@ -11,6 +20,23 @@
             </a>
             <h1 class="mb-4">Inpatients</h1>
             <p class="lead">List of all inpatients currently staying at Newark Medical Associates</p>
+
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{{ url_for('main.available_beds') }}" class="btn btn-success">
+                        <i class="bi bi-search"></i> Check Available Beds
+                    </a>
+                </div>
+                <div class="d-flex align-items-center unit-filter-wrapper">
+                    <label class="me-2 mb-0">Filter by Unit:</label>
+                    <select id="unitFilter" class="form-select js-select2">
+                        <option value="all">All Units</option>
+                        {% for unit in range(1, 8) %}
+                        <option value="{{ unit }}">Unit {{ unit }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -22,7 +48,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
+                        <table class="table table-striped table-hover" id="inpatientsTable">
                             <thead>
                                 <tr>
                                     <th>Patient ID</th>
@@ -37,7 +63,7 @@
                             </thead>
                             <tbody>
                                 {% for inpatient in inpatients %}
-                                <tr>
+                                <tr class="inpatient-row" data-unit="{{ inpatient.NursingUnits }}">
                                     <td>{{ inpatient.PatientID }}</td>
                                     <td>{{ inpatient.patient.Name }}</td>
                                     <td>{{ inpatient.AdmissionDate }}</td>
@@ -52,8 +78,37 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('main.patient_detail', id=inpatient.PatientID) }}"
-                                            class="btn btn-sm btn-primary">Details</a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
+                                                id="dropdownMenuButton{{ inpatient.PatientID }}"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu"
+                                                aria-labelledby="dropdownMenuButton{{ inpatient.PatientID }}">
+                                                <li><a class="dropdown-item"
+                                                        href="{{ url_for('main.patient_detail', id=inpatient.PatientID) }}">
+                                                        <i class="bi bi-person-badge"></i> View Details
+                                                    </a></li>
+                                                <li><a class="dropdown-item"
+                                                        href="{{ url_for('main.manage_inpatient', patient_id=inpatient.PatientID) }}">
+                                                        <i class="bi bi-pencil-square"></i> Update Bed Assignment
+                                                    </a></li>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
+                                                    <form
+                                                        action="{{ url_for('main.manage_inpatient', patient_id=inpatient.PatientID) }}"
+                                                        method="POST" style="display: inline;">
+                                                        <input type="hidden" name="remove_inpatient" value="1">
+                                                        <button type="submit" class="dropdown-item text-danger">
+                                                            <i class="bi bi-box-arrow-right"></i> Discharge Patient
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -74,7 +129,7 @@
                 <div class="card-body">
                     <div class="row">
                         {% for unit in range(1, 8) %}
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-3 unit-section" data-unit="{{ unit }}">
                             <div class="card">
                                 <div class="card-header">
                                     <h6 class="mb-0">Nursing Unit {{ unit }}</h6>
@@ -106,4 +161,35 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Initialize Select2
+        $('.js-select2').select2({
+            theme: 'bootstrap4',
+            width: '100%'
+        });
+
+        // Unit filter functionality
+        $('#unitFilter').on('change', function () {
+            const selectedUnit = $(this).val();
+
+            if (selectedUnit === 'all') {
+                // Show all rows and sections
+                $('.inpatient-row').show();
+                $('.unit-section').show();
+            } else {
+                // Filter the table rows
+                $('.inpatient-row').hide();
+                $(`.inpatient-row[data-unit="${selectedUnit}"]`).show();
+
+                // Show only the selected unit section
+                $('.unit-section').hide();
+                $(`.unit-section[data-unit="${selectedUnit}"]`).show();
+            }
+        });
+    });
+</script>
 {% endblock %}

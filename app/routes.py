@@ -4,11 +4,20 @@ from app import db
 from app.models import MedicalCorporation, Owner, Clinic, ClinicPersonnel, Physician, Nurse, Surgeon
 from app.models import Patient, Inpatient, Consultation, Diagnosis, SurgerySchedule, Prescription, Medication
 from app.models import Illness, Allergy, HeartRisk, SurgerySkill, NurseSkill, SurgeryType, OperatingRoom
-from app.models import DrugInteraction, InteractionSeverity, Gender
-from datetime import datetime
+from app.models import DrugInteraction, InteractionSeverity, Gender, Bed, BedLabel
+from datetime import datetime, date
 from sqlalchemy.exc import SQLAlchemyError
 
 main = Blueprint('main', __name__)
+
+# Register template context processors
+@main.context_processor
+def utility_processor():
+    """Add utility functions to template context"""
+    return {
+        'now': datetime.now,
+        'datetime': datetime
+    }
 
 @main.route('/')
 def home():
@@ -383,6 +392,33 @@ def add_patient():
     """Add a new patient"""
     if request.method == 'POST':
         try:
+            # Debug: Print form data to console
+            print("==== FORM DATA DEBUG ====")
+            print("Form keys:", list(request.form.keys()))
+            print("Illnesses[]:", request.form.getlist('illnesses[]'))
+            print("========================")
+            
+            # Get the current date for diagnosis creation
+            consultation_date = date.today()
+            
+            # Get selected illnesses
+            illness_codes = request.form.getlist('illnesses[]')
+            
+            # Debug: Print illness codes
+            print("Illness codes:", illness_codes)
+            
+            # Check for backup value if array is empty
+            if not illness_codes and request.form.get('illness_backup'):
+                illness_codes = [request.form.get('illness_backup')]
+                print("Using backup illness code:", illness_codes)
+            
+            # Validate at least one illness is selected
+            if not illness_codes:
+                # Debug: If no illness codes found
+                print("ERROR: No illness codes selected!")
+                flash("WARNING: You must select at least one illness from the dropdown. Please try again.", 'warning')
+                raise ValueError("A patient must have at least one illness")
+                
             # Create the new patient record
             new_patient = Patient(
                 Name=request.form['name'],
@@ -395,6 +431,9 @@ def add_patient():
                 IsInpatient=True if request.form.get('is_inpatient') else False,
                 IsEmployee=True if request.form.get('is_employee') else False
             )
+            
+            # Set flag to bypass illness validation in the model
+            setattr(new_patient, '_from_web_form', True)
             
             # Add optional fields if provided
             if request.form.get('blood_type'):
@@ -423,7 +462,32 @@ def add_patient():
             if new_patient.HDL and new_patient.LDL and new_patient.Triglyceride:
                 new_patient.HeartRiskLevel = new_patient.calculate_heart_risk()
             
+            # Create a new initial consultation for diagnoses
+            physician_id = int(request.form['primary_physician_id'])
+            
+            # Add the patient to the database to get the ID
             db.session.add(new_patient)
+            db.session.flush()  
+            
+            # Create a new consultation for the diagnoses
+            new_consultation = Consultation(
+                PatientID=new_patient.PatientID,
+                EmpID=physician_id,
+                ConsultationDate=consultation_date,
+                Notes="Initial patient registration"
+            )
+            db.session.add(new_consultation)
+            
+            # Create diagnoses records for each selected illness
+            for illness_code in illness_codes:
+                new_diagnosis = Diagnosis(
+                    PatientID=new_patient.PatientID,
+                    EmpID=physician_id,
+                    ConsultationDate=consultation_date,
+                    IllnessCode=illness_code
+                )
+                db.session.add(new_diagnosis)
+            
             db.session.commit()
             
             flash('Patient added successfully!', 'success')
@@ -442,10 +506,12 @@ def add_patient():
     # GET request - render form with needed data
     physicians = Physician.query.filter_by(IsActive=True).all()
     allergies = Allergy.query.all()
+    illnesses = Illness.query.all()
     
     return render_template('patients/form.html', 
                           physicians=physicians,
-                          allergies=allergies)
+                          allergies=allergies,
+                          illnesses=illnesses)
 
 @main.route('/patients/<int:id>/edit', methods=['GET', 'POST'])
 def edit_patient(id):
@@ -454,6 +520,30 @@ def edit_patient(id):
     
     if request.method == 'POST':
         try:
+            # Debug: Print form data to console
+            print("==== EDIT FORM DATA DEBUG ====")
+            print("Form keys:", list(request.form.keys()))
+            print("Illnesses[]:", request.form.getlist('illnesses[]'))
+            print("========================")
+            
+            # Get selected illnesses
+            illness_codes = request.form.getlist('illnesses[]')
+            
+            # Debug: Print illness codes
+            print("Edit - Illness codes:", illness_codes)
+            
+            # Check for backup value if array is empty
+            if not illness_codes and request.form.get('illness_backup'):
+                illness_codes = [request.form.get('illness_backup')]
+                print("Edit - Using backup illness code:", illness_codes)
+            
+            # Validate at least one illness is selected
+            if not illness_codes:
+                # Debug: If no illness codes found
+                print("Edit - ERROR: No illness codes selected!")
+                flash("WARNING: You must select at least one illness from the dropdown. Please try again.", 'warning')
+                raise ValueError("A patient must have at least one illness")
+            
             # Update patient information
             patient.Name = request.form['name']
             patient.SSN = request.form['ssn']
@@ -506,6 +596,37 @@ def edit_patient(id):
             else:
                 patient.HeartRiskLevel = None
             
+            # Update illnesses - create a new consultation if needed
+            today = date.today()
+            physician_id = int(request.form['primary_physician_id'])
+            
+            # Get current patient diagnoses
+            existing_diagnoses = Diagnosis.query.filter_by(PatientID=patient.PatientID).all()
+            existing_illness_codes = [diagnosis.IllnessCode for diagnosis in existing_diagnoses]
+            
+            # Check if there are any new illnesses to add
+            new_illnesses = [code for code in illness_codes if code not in existing_illness_codes]
+            
+            if new_illnesses:
+                # Create a new consultation for the new diagnoses
+                new_consultation = Consultation(
+                    PatientID=patient.PatientID,
+                    EmpID=physician_id,
+                    ConsultationDate=today,
+                    Notes="Patient record update"
+                )
+                db.session.add(new_consultation)
+                
+                # Create diagnoses records for each new illness
+                for illness_code in new_illnesses:
+                    new_diagnosis = Diagnosis(
+                        PatientID=patient.PatientID,
+                        EmpID=physician_id,
+                        ConsultationDate=today,
+                        IllnessCode=illness_code
+                    )
+                    db.session.add(new_diagnosis)
+            
             db.session.commit()
             
             flash('Patient updated successfully!', 'success')
@@ -524,17 +645,143 @@ def edit_patient(id):
     # GET request - render form with existing data
     physicians = Physician.query.filter_by(IsActive=True).all()
     allergies = Allergy.query.all()
+    illnesses = Illness.query.all()
+    
+    # Get current patient diagnoses
+    diagnoses = Diagnosis.query.filter_by(PatientID=patient.PatientID).all()
+    diagnosed_illnesses = [diagnosis.IllnessCode for diagnosis in diagnoses]
     
     return render_template('patients/form.html', 
                           patient=patient,
                           physicians=physicians,
-                          allergies=allergies)
+                          allergies=allergies,
+                          illnesses=illnesses,
+                          diagnosed_illnesses=diagnosed_illnesses)
 
 @main.route('/inpatients')
 def inpatients():
     """List all inpatients"""
     inpatients = Inpatient.query.join(Patient).all()
     return render_template('patients/inpatients.html', inpatients=inpatients)
+
+@main.route('/inpatients/available-beds')
+def available_beds():
+    """Shows all available beds for inpatient assignment"""
+    # Get all beds
+    all_beds = Bed.query.all()
+    
+    # Get occupied beds (beds that have an inpatient assigned)
+    occupied_bed_ids = db.session.query(Inpatient.PatientRoomID, Inpatient.BedLabel).all()
+    
+    # Filter out occupied beds
+    available_beds = [bed for bed in all_beds if (bed.PatientRoomID, bed.BedLabel) not in occupied_bed_ids]
+    
+    # Group beds by wing and unit for better display
+    grouped_beds = {}
+    for bed in available_beds:
+        key = f"{bed.Wing.value} Wing - Unit {bed.Unit}"
+        if key not in grouped_beds:
+            grouped_beds[key] = []
+        grouped_beds[key].append(bed)
+    
+    return render_template('patients/available_beds.html', grouped_beds=grouped_beds)
+
+@main.route('/inpatients/manage/<int:patient_id>', methods=['GET', 'POST'])
+def manage_inpatient(patient_id):
+    """Assign or remove a patient to/from a bed"""
+    patient = Patient.query.get_or_404(patient_id)
+    
+    # Check if patient is already an inpatient
+    existing_inpatient = Inpatient.query.filter_by(PatientID=patient_id).first()
+    
+    if request.method == 'POST':
+        if 'remove_inpatient' in request.form:
+            # Remove patient from inpatient status
+            if existing_inpatient:
+                try:
+                    # Update patient record
+                    patient.IsInpatient = False
+                    # Delete inpatient record
+                    db.session.delete(existing_inpatient)
+                    db.session.commit()
+                    flash(f'Patient {patient.Name} successfully discharged from inpatient care.', 'success')
+                    return redirect(url_for('main.inpatients'))
+                except SQLAlchemyError as e:
+                    db.session.rollback()
+                    flash(f'Error discharging patient: {str(e)}', 'danger')
+            else:
+                flash('This patient is not currently an inpatient.', 'warning')
+        else:
+            # Add/update inpatient assignment
+            try:
+                room_id = int(request.form['room_id'])
+                bed_label = BedLabel[request.form['bed_label']]
+                nursing_unit = request.form['nursing_unit']
+                nurse_id = int(request.form['nurse_id']) if request.form['nurse_id'] else None
+                admission_date = datetime.strptime(request.form['admission_date'], '%Y-%m-%d').date()
+                
+                # Check if bed is available (not assigned to another inpatient)
+                bed_occupied = Inpatient.query.filter_by(
+                    PatientRoomID=room_id, 
+                    BedLabel=bed_label
+                ).filter(Inpatient.PatientID != patient_id).first()
+                
+                if bed_occupied:
+                    flash('This bed is already occupied by another patient.', 'danger')
+                    return redirect(url_for('main.manage_inpatient', patient_id=patient_id))
+                
+                # Check if bed exists
+                bed = Bed.query.filter_by(PatientRoomID=room_id, BedLabel=bed_label).first()
+                if not bed:
+                    flash('The selected bed does not exist.', 'danger')
+                    return redirect(url_for('main.manage_inpatient', patient_id=patient_id))
+                
+                if existing_inpatient:
+                    # Update existing inpatient record
+                    existing_inpatient.PatientRoomID = room_id
+                    existing_inpatient.BedLabel = bed_label
+                    existing_inpatient.NursingUnits = nursing_unit
+                    existing_inpatient.EmpID = nurse_id
+                    existing_inpatient.AdmissionDate = admission_date
+                else:
+                    # Create new inpatient record
+                    new_inpatient = Inpatient(
+                        PatientID=patient_id,
+                        PatientRoomID=room_id,
+                        BedLabel=bed_label,
+                        NursingUnits=nursing_unit,
+                        EmpID=nurse_id,
+                        AdmissionDate=admission_date
+                    )
+                    db.session.add(new_inpatient)
+                
+                # Update patient's inpatient status
+                patient.IsInpatient = True
+                
+                db.session.commit()
+                flash(f'Patient {patient.Name} successfully assigned to Room {bed.RoomNum}, Bed {bed_label.value}.', 'success')
+                return redirect(url_for('main.inpatients'))
+                
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                flash(f'Error assigning patient to bed: {str(e)}', 'danger')
+            except ValueError as e:
+                flash(f'Invalid data: {str(e)}', 'danger')
+    
+    # For GET request or if POST fails
+    # Get all available beds (excluding the bed the patient might already be in)
+    beds = Bed.query.all()
+    occupied_beds = db.session.query(Inpatient.PatientRoomID, Inpatient.BedLabel).filter(Inpatient.PatientID != patient_id).all()
+    available_beds = [bed for bed in beds if (bed.PatientRoomID, bed.BedLabel) not in occupied_beds]
+    
+    # Get all nurses
+    nurses = Nurse.query.join(ClinicPersonnel).all()
+    
+    return render_template('patients/manage_inpatient.html', 
+                          patient=patient,
+                          existing_inpatient=existing_inpatient,
+                          available_beds=available_beds,
+                          nurses=nurses)
 
 # Nurse routes
 @main.route('/nurses')
@@ -872,11 +1119,35 @@ def delete_surgeon(id):
     return redirect(url_for('main.surgeons'))
 
 # Surgery routes
-@main.route('/surgery-schedules')
+@main.route('/surgery-schedules', methods=['GET'])
 def surgery_schedules():
-    """List all surgery schedules"""
-    surgeries = SurgerySchedule.query.order_by(SurgerySchedule.Date).all()
-    return render_template('surgeries/index.html', surgeries=surgeries)
+    """List all surgery schedules, with optional date filtering"""
+    # Check if a specific date is requested
+    filter_date = request.args.get('date')
+    
+    # Query surgeries based on filter
+    query = SurgerySchedule.query
+    
+    if filter_date:
+        try:
+            # Parse the date string to a date object
+            filter_date_obj = datetime.strptime(filter_date, '%Y-%m-%d').date()
+            query = query.filter(SurgerySchedule.Date == filter_date_obj)
+        except ValueError:
+            # If date format is invalid, ignore the filter
+            flash('Invalid date format. Showing all surgeries.', 'warning')
+    
+    # Get all distinct surgery dates for the date selector
+    distinct_dates = db.session.query(SurgerySchedule.Date).distinct().order_by(SurgerySchedule.Date).all()
+    distinct_dates = [date[0] for date in distinct_dates]
+    
+    # Execute the query with ordering
+    surgeries = query.order_by(SurgerySchedule.Date).all()
+    
+    return render_template('surgeries/index.html', 
+                          surgeries=surgeries, 
+                          distinct_dates=distinct_dates,
+                          selected_date=filter_date)
 
 @main.route('/surgery-schedules/add', methods=['GET', 'POST'])
 def add_surgery_schedule():

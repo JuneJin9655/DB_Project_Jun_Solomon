@@ -458,6 +458,12 @@ def check_patient_illness(mapper, connection, patient):
     if hasattr(patient, '_skip_illness_check') and patient._skip_illness_check:
         return
     
+    # Skip validation for web form submissions - we'll handle this in the route
+    if hasattr(patient, '_from_web_form') and patient._from_web_form:
+        print("Skipping illness validation for web form submission")
+        return
+    
     # Validate that a patient has at least one illness
     if not patient.diagnoses:
+        print("Patient validation failed: No illnesses detected")
         raise ValueError("A patient must have at least one illness")

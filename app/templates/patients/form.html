@@ -164,6 +164,42 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="illnesses" class="form-label">Patient Illnesses <span
+                                class="text-danger">*</span></label>
+                        <!-- Adding a hidden field as a backup for illness data -->
+                        <input type="hidden" id="illness_backup" name="illness_backup" value="ILL001">
+
+                        <select class="form-select select2-illnesses" id="illnesses" name="illnesses[]" multiple
+                            required data-placeholder="Select at least one illness">
+                            <!-- Default option for Hypertension (placed first) -->
+                            <option value="ILL001" {% if diagnosed_illnesses is defined and 'ILL001' in
+                                diagnosed_illnesses %}selected {% elif not patient %}selected{% endif %}>
+                                ILL001 - Hypertension (Default)
+                            </option>
+
+                            <!-- All other illnesses -->
+                            {% for illness in illnesses %}
+                            {% if illness.IllnessCode != 'ILL001' %}
+                            <option value="{{ illness.IllnessCode }}" {% if diagnosed_illnesses is defined and
+                                illness.IllnessCode in diagnosed_illnesses %}selected{% endif %}>
+                                {{ illness.IllnessCode }} - {{ illness.Description }}
+                            </option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <!-- Note: ILL001 is pre-selected for new patients (Hypertension) -->
+                        <div class="form-text text-info">
+                            <i class="bi bi-info-circle"></i> Patients must have at least one illness diagnosis.
+                        </div>
+                        <div class="invalid-feedback">
+                            Please select at least one illness.
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row mb-3">
                     <div class="col-md-3">
                         <label for="hdl" class="form-label">HDL Cholesterol</label>
@@ -242,6 +278,88 @@
             minimumInputLength: 1,  // Require at least 1 character to trigger search
             placeholder: "Search for a physician by name or specialty..."
         });
+
+        // Initialize Select2 for illness dropdown with default selection
+        const illnessSelect = $('.select2-illnesses');
+
+        // Initialize the Select2
+        illnessSelect.select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            dropdownParent: $('body'),
+            placeholder: "Select at least one illness...",
+            allowClear: true,
+            closeOnSelect: false
+        });
+
+        // Force select Hypertension (ILL001) if nothing is selected for new patients
+        if (!illnessSelect.val() || illnessSelect.val().length === 0) {
+            // For new patients, select ILL001 by default
+            if (!$('#illness_backup').val()) {
+                $('#illness_backup').val('ILL001');
+            }
+
+            // Try to set the select value programmatically
+            if (!$('#patient').length) { // Check if we're on a new patient form
+                illnessSelect.val(['ILL001']).trigger('change');
+            }
+        }
+
+        // Custom validation for Select2 illness field
+        $('#illnesses').on('change', function () {
+            if ($(this).val() && $(this).val().length > 0) {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        });
+
+        // Add form submit validation to ensure illness is selected
+        $('form').on('submit', function (event) {
+            console.log("Form submitting, illness values:", $('#illnesses').val());
+
+            const illnessSelect = $('#illnesses');
+            const illnessBackup = $('#illness_backup');
+
+            // Check if any illness is selected
+            if (!illnessSelect.val() || illnessSelect.val().length === 0) {
+                // Try to use the backup value or default to Hypertension
+                const backupValue = illnessBackup.val() || 'ILL001';
+
+                // Try to set the select value one last time
+                illnessSelect.val([backupValue]);
+                illnessSelect.trigger('change');
+
+                console.log("After fixing, illness values:", illnessSelect.val());
+
+                // If still no value, prevent submission
+                if (!illnessSelect.val() || illnessSelect.val().length === 0) {
+                    illnessSelect.addClass('is-invalid');
+                    alert("Please select at least one illness. This is a required field.");
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    // Scroll to the illness field
+                    $('html, body').animate({
+                        scrollTop: illnessSelect.offset().top - 100
+                    }, 200);
+
+                    // Flash the field to draw attention
+                    illnessSelect.closest('.row').addClass('bg-light');
+                    setTimeout(function () {
+                        illnessSelect.closest('.row').removeClass('bg-light');
+                    }, 500);
+                }
+            }
+        });
+
+        // Trigger change event to initialize validation state
+        $('#illnesses').trigger('change');
+
+        // Add a warning message if no illnesses are selected
+        if (!$('#illnesses').val() || $('#illnesses').val().length === 0) {
+            $('#illnesses').after('<div class="alert alert-warning mt-2">Important: You must select at least one illness diagnosis. Hypertension (ILL001) is pre-selected for your convenience.</div>');
+        }
 
         // Format physician options in dropdown
         function formatPhysician(physician) {

@@ -25,10 +25,69 @@
     </div>
 
     <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">Filter Surgeries by Date</h6>
+                </div>
+                <div class="card-body">
+                    <form id="dateFilterForm" action="{{ url_for('main.surgery_schedules') }}" method="GET"
+                        class="d-flex align-items-center">
+                        <div class="flex-grow-1 me-2">
+                            <select id="dateFilter" name="date" class="form-select select2-date"
+                                data-placeholder="Select a date to filter...">
+                                <option value="">All Dates</option>
+                                {% for date in distinct_dates %}
+                                <option value="{{ date.strftime('%Y-%m-%d') }}" {% if selected_date and
+                                    selected_date==date.strftime('%Y-%m-%d') %}selected{% endif %}>
+                                    {{ date.strftime('%B %d, %Y') }} ({{ date.strftime('%A') }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-filter"></i> Filter
+                            </button>
+                            {% if selected_date %}
+                            <a href="{{ url_for('main.surgery_schedules') }}" class="btn btn-outline-secondary ms-1">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            {% if selected_date %}
+            <div class="alert alert-info">
+                <i class="bi bi-calendar-check"></i>
+                Showing surgeries for <strong>{{ datetime.strptime(selected_date, '%Y-%m-%d').strftime('%B %d, %Y')
+                    }}</strong>
+                <span class="badge bg-primary ms-2">{{ surgeries|length }} surgeries</span>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary">
+                <i class="bi bi-calendar-range"></i>
+                Showing all scheduled surgeries
+                <span class="badge bg-primary ms-2">{{ surgeries|length }} surgeries</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">All Scheduled Surgeries</h5>
+                    <div class="input-group flex-nowrap" style="max-width: 300px;">
+                        <input type="text" id="surgerySearch" class="form-control" placeholder="Search surgeries...">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-search"></i>
+                        </span>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -133,6 +192,19 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Select2 for date filter
+        $('.select2-date').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            allowClear: true,
+            dropdownParent: $('body')
+        });
+
+        // Auto-submit form when date changes
+        $('#dateFilter').on('change', function () {
+            $('#dateFilterForm').submit();
+        });
+
         // Initialize search functionality
         document.getElementById('surgerySearch').addEventListener('keyup', function () {
             const searchTerm = this.value.toLowerCase();

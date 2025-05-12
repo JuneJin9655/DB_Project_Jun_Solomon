@@ -1,0 +1,235 @@
+{% extends 'layout.html' %}
+
+{% block title %}Manage Inpatient - {{ patient.Name }} - Newark Medical Associates{% endblock %}
+
+{% block extra_css %}
+<!-- Bootstrap Datepicker CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+    rel="stylesheet">
+
+<style>
+    /* Additional styling to ensure Select2 looks good */
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        padding: 5px 0;
+    }
+
+    /* Ensure datepicker shows properly */
+    .datepicker-dropdown {
+        z-index: 9999 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <a href="{{ url_for('main.patient_detail', id=patient.PatientID) }}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Patient
+            </a>
+            <h1 class="mb-4">Manage Inpatient Status</h1>
+            <p class="lead">{% if existing_inpatient %}Update{% else %}Assign{% endif %} {{ patient.Name }}'s inpatient
+                status</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Patient ID:</label>
+                        <p>{{ patient.PatientID }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Name:</label>
+                        <p>{{ patient.Name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Current Status:</label>
+                        {% if patient.IsInpatient %}
+                        <p><span class="badge bg-warning">Inpatient</span></p>
+                        {% else %}
+                        <p><span class="badge bg-success">Outpatient</span></p>
+                        {% endif %}
+                    </div>
+                    {% if existing_inpatient %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Current Room:</label>
+                        <p>{{ existing_inpatient.bed.RoomNum }} (ID: {{ existing_inpatient.PatientRoomID }})</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Current Bed:</label>
+                        <p>{{ existing_inpatient.BedLabel.value }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nursing Unit:</label>
+                        <p>{{ existing_inpatient.NursingUnits }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Assigned Nurse:</label>
+                        <p>
+                            {% if existing_inpatient.nurse %}
+                            {{ existing_inpatient.nurse.personnel.Name }}
+                            {% else %}
+                            <span class="text-muted">None assigned</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Admission Date:</label>
+                        <p>{{ existing_inpatient.AdmissionDate }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">{% if existing_inpatient %}Update{% else %}Assign{% endif %} Inpatient</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="room_id" class="form-label">Room ID</label>
+                            <select class="form-select js-select2" id="room_id" name="room_id" required>
+                                <option value="" disabled {% if not existing_inpatient %}selected{% endif %}>Select Room
+                                    ID</option>
+                                {% for bed in available_beds %}
+                                <option value="{{ bed.PatientRoomID }}" {% if existing_inpatient and
+                                    existing_inpatient.PatientRoomID==bed.PatientRoomID %}selected{% endif %}
+                                    data-room-num="{{ bed.RoomNum }}" data-bed-label="{{ bed.BedLabel.name }}"
+                                    data-unit="{{ bed.Unit }}">
+                                    Room {{ bed.RoomNum }} (ID: {{ bed.PatientRoomID }})
+                                </option>
+                                {% endfor %}
+                                {% if existing_inpatient %}
+                                <option value="{{ existing_inpatient.PatientRoomID }}" selected>
+                                    Current: Room {{ existing_inpatient.bed.RoomNum }} (ID: {{
+                                    existing_inpatient.PatientRoomID }})
+                                </option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bed_label" class="form-label">Bed Label</label>
+                            <select class="form-select js-select2" id="bed_label" name="bed_label" required>
+                                <option value="" disabled {% if not existing_inpatient %}selected{% endif %}>Select Bed
+                                    Label</option>
+                                {% for enum_value in ['A', 'B'] %}
+                                <option value="{{ enum_value }}" {% if existing_inpatient and
+                                    existing_inpatient.BedLabel.name==enum_value %}selected{% endif %}>
+                                    {{ enum_value }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nursing_unit" class="form-label">Nursing Unit</label>
+                            <select class="form-select js-select2" id="nursing_unit" name="nursing_unit" required>
+                                <option value="" disabled {% if not existing_inpatient %}selected{% endif %}>Select
+                                    Nursing Unit</option>
+                                {% for unit in range(1, 8) %}
+                                <option value="{{ unit }}" {% if existing_inpatient and
+                                    existing_inpatient.NursingUnits==unit|string %}selected{% endif %}>
+                                    {{ unit }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nurse_id" class="form-label">Assigned Nurse</label>
+                            <select class="form-select js-select2" id="nurse_id" name="nurse_id">
+                                <option value="">No Nurse Assigned</option>
+                                {% for nurse in nurses %}
+                                <option value="{{ nurse.EmpID }}" {% if existing_inpatient and
+                                    existing_inpatient.EmpID==nurse.EmpID %}selected{% endif %}>
+                                    {{ nurse.personnel.Name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="admission_date" class="form-label">Admission Date</label>
+                            <input type="text" class="form-control js-datepicker" id="admission_date"
+                                name="admission_date"
+                                value="{{ existing_inpatient.AdmissionDate if existing_inpatient else now().strftime('%Y-%m-%d') }}"
+                                required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                {% if existing_inpatient %}Update{% else %}Assign{% endif %} Inpatient
+                            </button>
+                            {% if existing_inpatient %}
+                            <button type="submit" class="btn btn-danger" name="remove_inpatient" value="1">
+                                Discharge Patient
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Need to check available beds?</h5>
+                    <p class="card-text">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        You can view all available beds in the hospital to help you make an informed decision.
+                    </p>
+                    <a href="{{ url_for('main.available_beds') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-search me-1"></i> Check Available Beds
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Bootstrap Datepicker JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Initialize Select2
+        $('.js-select2').select2({
+            theme: 'bootstrap4',
+            width: '100%'
+        });
+
+        // Initialize Datepicker
+        $('.js-datepicker').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        // When room selection changes, update the bed label options
+        $('#room_id').on('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+
+            // If there's a data-bed-label attribute, update the bed label selection
+            if (selectedOption.dataset.bedLabel) {
+                $('#bed_label').val(selectedOption.dataset.bedLabel).trigger('change');
+            }
+
+            // If there's a data-unit attribute, update the nursing unit selection
+            if (selectedOption.dataset.unit) {
+                $('#nursing_unit').val(selectedOption.dataset.unit).trigger('change');
+            }
+        });
+    });
+</script>
+{% endblock %}

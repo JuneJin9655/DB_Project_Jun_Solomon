@@ -27,6 +27,17 @@
                             class="btn btn-sm btn-light ms-2">
                             <i class="bi bi-pencil"></i> Edit Patient
                         </a>
+                        {% if patient.IsInpatient %}
+                        <a href="{{ url_for('main.manage_inpatient', patient_id=patient.PatientID) }}"
+                            class="btn btn-sm btn-warning ms-2">
+                            <i class="bi bi-hospital"></i> Manage Bed
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('main.manage_inpatient', patient_id=patient.PatientID) }}"
+                            class="btn btn-sm btn-success ms-2">
+                            <i class="bi bi-hospital"></i> Assign Bed
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-body">
@@ -303,6 +314,20 @@
                                         Not assigned
                                         {% endif %}
                                     </p>
+                                    <div class="mt-3">
+                                        <a href="{{ url_for('main.manage_inpatient', patient_id=patient.PatientID) }}"
+                                            class="btn btn-primary">
+                                            <i class="bi bi-pencil-square"></i> Update Bed Assignment
+                                        </a>
+                                        <form method="POST"
+                                            action="{{ url_for('main.manage_inpatient', patient_id=patient.PatientID) }}"
+                                            class="d-inline">
+                                            <input type="hidden" name="remove_inpatient" value="1">
+                                            <button type="submit" class="btn btn-danger ms-2">
+                                                <i class="bi bi-box-arrow-right"></i> Discharge Patient
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
